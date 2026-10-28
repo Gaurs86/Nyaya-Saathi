@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nyaya Saathi Impact</title>
+  <style>body{font-family:system-ui;padding:12px}pre{background:#f7f7f7;padding:12px;border-radius:6px}</style>
+</head>
+<body>
+  <h1>Impact</h1>
+  <div id="stats">Loading...</div>
+  <script>
+    async function load(){
+      const r = await fetch('/impact')
+      const j = await r.json()
+      document.getElementById('stats').innerHTML = '<pre>'+JSON.stringify(j,null,2)+'</pre>'
+    }
+    load()
+  </script>
+</body>
+</html>

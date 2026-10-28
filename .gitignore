@@ -1,0 +1,8 @@
+__pycache__/
+.env
+.env.local
+.venv/
+.codenow/runs/
+nyaya-saathi/data/events.jsonl
+.DS_Store
+.codenow/

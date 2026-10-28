@@ -1,0 +1,21 @@
+# Render service configuration for free web service
+services:
+  - type: web
+    name: nyaya-saathi
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r nyaya-saathi/requirements.txt"
+    startCommand: "uvicorn app:app --host 0.0.0.0 --port ${PORT}"
+    healthCheckPath: "/health"
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SYNC
+        value: "false"

@@ -1,0 +1,75 @@
+# Deadline rules for Indian legal notices
+# One entry per document type. Law student to verify and edit these entries.
+
+cheque_bounce_138:
+  description: "Section 138 NI Act: Pay the amount within 15 days of receipt of notice to avoid prosecution."
+  relative_deadlines:
+    - label: "pay within 15 days"
+      days: 15
+      from: "receipt"
+  notes: "Section 138(c) commonly gives a 15-day window to make payment from receipt of the notice. Verify exact provision and local practice."
+  source: "Negotiable Instruments Act (provisional)"
+  verified: false
+
+court_summons:
+  description: "Court summons: appear on the hearing date; file written statement within statutory period for civil suits."
+  relative_deadlines:
+    - label: "appear on hearing date"
+      days: 0
+      from: "notice_date"
+    - label: "file written statement"
+      days: 30
+      from: "notice_date"
+  notes: "CPC Order VIII Rule 1 provides 30 days to file written statement from service (verify local rules)."
+  source: "Code of Civil Procedure (CPC) — Order VIII, Rule 1 (provisional)"
+  verified: false
+
+eviction_or_rent:
+  description: "Eviction or rent recovery notices: follow period stated in the notice; for monthly tenancies Section 106/106A/ relevant TPA practice may give 15 days."
+  relative_deadlines:
+    - label: "follow notice period"
+      days: 0
+      from: "notice_date"
+    - label: "monthly tenancy fallback: 15 days"
+      days: 15
+      from: "receipt"
+  notes: "Use the period stated in the notice when present. Section 106 (TPA) or local Rent Control rules may provide 15-day periods for monthly tenancies — verify."
+  source: "Transfer of Property Act / Rent Practice (provisional)"
+  verified: false
+
+labour_or_wage:
+  description: "Labour/wage recovery: follow statutory or scheme deadlines; where not stated, use notice timelines."
+  relative_deadlines:
+    - label: "follow notice period"
+      days: 0
+      from: "notice_date"
+  notes: "Labour laws and municipal schemes vary; follow deadlines in the notice or scheme."
+  source: "Labour laws / local authorities (provisional)"
+  verified: false
+
+scheme_rejection:
+  description: "Rejection of scheme/subsidy: follow appeal timelines stated in the notice."
+  relative_deadlines:
+    - label: "follow notice period"
+      days: 0
+      from: "notice_date"
+  notes: "Appeal or review periods are usually specified in the scheme notice — use those."
+  source: "Scheme rules (provisional)"
+  verified: false
+
+family_or_maintenance:
+  description: "Family or maintenance matters: follow dates stated in the notice or court order."
+  relative_deadlines:
+    - label: "follow notice period"
+      days: 0
+      from: "notice_date"
+  notes: "Domestic violence or maintenance orders have specific procedures; use dates in the document."
+  source: "Family law / Protection of Women (provisional)"
+  verified: false
+
+other:
+  description: "Other document types: default to using explicit dates in the notice."
+  relative_deadlines: []
+  notes: "If no relative rule applies, rely solely on dates stated in the document."
+  source: "General guidance"
+  verified: false
