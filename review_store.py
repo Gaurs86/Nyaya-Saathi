@@ -239,10 +239,21 @@ def update_brief(
         updated.pop("reviewer_approval", None)
         new_revision = row["revision"] + 1
         new_status = "pending_review"
-        conn.execute(
-            "UPDATE review_cases SET brief_json=?, revision=?, status=?, updated_at=? WHERE case_id=?",
-            (_json_dumps(updated), new_revision, new_status, now, case_id),
+        updated.setdefault("reviewer_corrections", []).append({
+            "revision": new_revision,
+            "corrected_at": now,
+            "reviewer_label": actor_label[:80],
+            "fields": changed_fields,
+            "note": note[:2000],
+        })
+        # Update with the expected revision in SQL as well as checking it above;
+        # a concurrent reviewer cannot overwrite a newer correction.
+        cursor = conn.execute(
+            "UPDATE review_cases SET brief_json=?, revision=?, status=?, updated_at=? WHERE case_id=? AND revision=?",
+            (_json_dumps(updated), new_revision, new_status, now, case_id, expected_revision),
         )
+        if cursor.rowcount != 1:
+            raise RuntimeError("revision_conflict")
         audit_changes = {
             key: {"before": previous.get(key), "after": updated.get(key)}
             for key in changed_fields
@@ -305,10 +316,12 @@ def decide_case(
             }
         else:
             brief.pop("reviewer_approval", None)
-        conn.execute(
-            "UPDATE review_cases SET brief_json=?, status=?, revision=revision+1, updated_at=? WHERE case_id=?",
-            (_json_dumps(brief), decision, now, case_id),
+        cursor = conn.execute(
+            "UPDATE review_cases SET brief_json=?, status=?, revision=revision+1, updated_at=? WHERE case_id=? AND revision=?",
+            (_json_dumps(brief), decision, now, case_id, expected_revision),
         )
+        if cursor.rowcount != 1:
+            raise RuntimeError("revision_conflict")
         _add_event(conn, case_id, actor, decision, {
             "note": note.strip(),
             "confirmations": confirmations if decision == "approved" else {},
