@@ -1,0 +1,244 @@
+const I = {
+  en: { title:"Nyaya Saathi", tag:"Understand your legal notice in simple words.", agree:"I agree and continue",
+    upload:"Upload your notice", hint:"Take a clear photo of each page (up to 3), or choose a PDF.", pick:"📷 Take photo or choose file", rm:"Remove",
+    received:"Date you received the notice (optional)", receivedHint:"This helps us work out your deadline.", district:"Your district (optional)", none:"Select district",
+    go:"Explain my notice", s1:"Reading your notice…", s2:"Checking deadlines and rules…", s3:"Writing your explanation…", wait:"This takes about 20 seconds.",
+    help:"Is this about arrest, violence or a child? Get help now", call:"📞 Call NALSA 15100", urgent:"URGENT: contact legal aid today",
+    listen:"🔊 Listen", stop:"⏹ Stop", print:"🖨 Print", up:"👍 Helpful", down:"👎 Not helpful", thanks:"Thank you for your feedback.",
+    briefTitle:"Lawyer intake brief (draft)", briefStatus:"Draft pending lawyer review. Check every fact, quotation and date against the original before relying on this brief.", downloadBrief:"Download lawyer brief (JSON)", saveToWorkspace:"Save to lawyer review workspace",
+    again:"Check another notice", follow:"Ask a question about this notice", ask:"Ask", ph:"Type your question", err:"Something went wrong.", nofile:"Please add at least one page.",
+    footer:"This is legal information, not legal advice. Please confirm with a lawyer or legal aid volunteer." },
+  hi: { title:"न्याय साथी", tag:"अपने कानूनी नोटिस को आसान शब्दों में समझें।", agree:"मैं सहमत हूँ, आगे बढ़ें",
+    upload:"अपना नोटिस अपलोड करें", hint:"हर पन्ने की साफ़ फ़ोटो लें (अधिकतम 3) या PDF चुनें।", pick:"📷 फ़ोटो लें या फ़ाइल चुनें", rm:"हटाएँ",
+    received:"नोटिस मिलने की तारीख़ (वैकल्पिक)", receivedHint:"इससे आपकी अंतिम तिथि निकालने में मदद मिलती है।", district:"आपका ज़िला (वैकल्पिक)", none:"ज़िला चुनें",
+    go:"मेरा नोटिस समझाएँ", s1:"आपका नोटिस पढ़ रहे हैं…", s2:"समय-सीमा और नियम जाँच रहे हैं…", s3:"आपके लिए समझाइश लिख रहे हैं…", wait:"इसमें लगभग 20 सेकंड लगते हैं।",
+    help:"क्या यह गिरफ़्तारी, हिंसा या बच्चे के बारे में है? अभी मदद लें", call:"📞 NALSA 15100 पर कॉल करें", urgent:"ज़रूरी: आज ही कानूनी सहायता से संपर्क करें",
+    listen:"🔊 सुनें", stop:"⏹ रोकें", print:"🖨 प्रिंट", up:"👍 उपयोगी", down:"👎 उपयोगी नहीं", thanks:"आपकी राय के लिए धन्यवाद।",
+    briefTitle:"वकील के लिए केस-सार (मसौदा)", briefStatus:"यह मसौदा वकील की समीक्षा के लिए है। भरोसा करने से पहले हर तथ्य, उद्धरण और तारीख़ को मूल दस्तावेज़ से मिलाएँ।", downloadBrief:"केस-सार डाउनलोड करें (JSON)", saveToWorkspace:"वकील समीक्षा कार्यक्षेत्र में सहेजें",
+    again:"दूसरा नोटिस जाँचें", follow:"इस नोटिस के बारे में सवाल पूछें", ask:"पूछें", ph:"अपना सवाल लिखें", err:"कुछ गलत हो गया।", nofile:"कृपया कम से कम एक पन्ना जोड़ें।",
+    footer:"यह कानूनी जानकारी है, कानूनी सलाह नहीं। कृपया किसी वकील या कानूनी सहायता स्वयंसेवक से पुष्टि करें।" },
+  kn: { title:"ನ್ಯಾಯ ಸಾಥಿ", tag:"ನಿಮ್ಮ ಕಾನೂನು ನೋಟಿಸ್ ಅನ್ನು ಸರಳ ಮಾತುಗಳಲ್ಲಿ ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ.", agree:"ನಾನು ಒಪ್ಪುತ್ತೇನೆ, ಮುಂದುವರಿಸಿ",
+    upload:"ನಿಮ್ಮ ನೋಟಿಸ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ", hint:"ಪ್ರತಿ ಪುಟದ ಸ್ಪಷ್ಟ ಫೋಟೋ ತೆಗೆಯಿರಿ (ಗರಿಷ್ಠ 3) ಅಥವಾ PDF ಆಯ್ಕೆಮಾಡಿ.", pick:"📷 ಫೋಟೋ ತೆಗೆಯಿರಿ ಅಥವಾ ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ", rm:"ತೆಗೆಯಿರಿ",
+    received:"ನೋಟಿಸ್ ಸಿಕ್ಕ ದಿನಾಂಕ (ಐಚ್ಛಿಕ)", receivedHint:"ಇದು ನಿಮ್ಮ ಗಡುವನ್ನು ಲೆಕ್ಕಹಾಕಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.", district:"ನಿಮ್ಮ ಜಿಲ್ಲೆ (ಐಚ್ಛಿಕ)", none:"ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ",
+    go:"ನನ್ನ ನೋಟಿಸ್ ವಿವರಿಸಿ", s1:"ನಿಮ್ಮ ನೋಟಿಸ್ ಓದುತ್ತಿದ್ದೇವೆ…", s2:"ಗಡುವು ಮತ್ತು ನಿಯಮಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತಿದ್ದೇವೆ…", s3:"ನಿಮಗಾಗಿ ವಿವರಣೆ ಬರೆಯುತ್ತಿದ್ದೇವೆ…", wait:"ಇದಕ್ಕೆ ಸುಮಾರು 20 ಸೆಕೆಂಡ್ ಬೇಕು.",
+    help:"ಇದು ಬಂಧನ, ಹಿಂಸೆ ಅಥವಾ ಮಗುವಿನ ಬಗ್ಗೆ ಇದೆಯೇ? ಈಗಲೇ ಸಹಾಯ ಪಡೆಯಿರಿ", call:"📞 NALSA 15100 ಗೆ ಕರೆ ಮಾಡಿ", urgent:"ತುರ್ತು: ಇಂದೇ ಕಾನೂನು ನೆರವನ್ನು ಸಂಪರ್ಕಿಸಿ",
+    listen:"🔊 ಕೇಳಿ", stop:"⏹ ನಿಲ್ಲಿಸಿ", print:"🖨 ಪ್ರಿಂಟ್", up:"👍 ಉಪಯುಕ್ತ", down:"👎 ಉಪಯುಕ್ತವಲ್ಲ", thanks:"ನಿಮ್ಮ ಅಭಿಪ್ರಾಯಕ್ಕೆ ಧನ್ಯವಾದಗಳು.",
+    briefTitle:"ವಕೀಲರಿಗಾಗಿ ಪ್ರಕರಣದ ಸಾರಾಂಶ (ಕರಡು)", briefStatus:"ಇದು ವಕೀಲರ ಪರಿಶೀಲನೆಗಾಗಿ ಇರುವ ಕರಡು. ಬಳಸುವ ಮೊದಲು ಪ್ರತಿಯೊಂದು ವಿಷಯ, ಉಲ್ಲೇಖ ಮತ್ತು ದಿನಾಂಕವನ್ನು ಮೂಲ ದಾಖಲೆಯೊಂದಿಗೆ ಪರಿಶೀಲಿಸಿ.", downloadBrief:"ಪ್ರಕರಣದ ಸಾರಾಂಶ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ (JSON)", saveToWorkspace:"ವಕೀಲರ ಪರಿಶೀಲನಾ ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ಉಳಿಸಿ",
+    again:"ಇನ್ನೊಂದು ನೋಟಿಸ್ ಪರಿಶೀಲಿಸಿ", follow:"ಈ ನೋಟಿಸ್ ಬಗ್ಗೆ ಪ್ರಶ್ನೆ ಕೇಳಿ", ask:"ಕೇಳಿ", ph:"ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಬರೆಯಿರಿ", err:"ಏನೋ ತಪ್ಪಾಗಿದೆ.", nofile:"ದಯವಿಟ್ಟು ಕನಿಷ್ಠ ಒಂದು ಪುಟ ಸೇರಿಸಿ.",
+    footer:"ಇದು ಕಾನೂನು ಮಾಹಿತಿ, ಕಾನೂನು ಸಲಹೆ ಅಲ್ಲ. ದಯವಿಟ್ಟು ವಕೀಲರು ಅಥವಾ ಕಾನೂನು ನೆರವು ಸ್ವಯಂಸೇವಕರಲ್ಲಿ ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ." }
+};
+const CONSENT = {
+  en: "Your notice is processed by Google Gemini's free service, which may use it to improve their products. We don't store it. Cover names and addresses if you prefer.",
+  hi: "आपका नोटिस Google Gemini की मुक्त सेवा द्वारा संसाधित किया जाएगा, जो अपने उत्पादों को बेहतर बनाने के लिए इसका उपयोग कर सकता है। हम इसे संग्रहीत नहीं करते। यदि आप चाहें तो नाम और पते ढक दें।",
+  kn: "ನಿಮ್ಮ ನೋಟೀಸ್ ಅನ್ನು ಗೂಗಲ್ ಜೆಮಿನಿ ಉಚಿತ ಸೇವೆ ಮೂಲಕ ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತದೆ, ಅದು ಅವರ ಉತ್ಪನ್ನಗಳನ್ನು ಸುಧಾರಿಸಲು ಇದನ್ನು ಉಪಯೋಗಿಸಬಹುದು. ನಾವು ಇದನ್ನು ಸಂಗ್ರಹಿಸುವುದಿಲ್ಲ. ನೀವು ಇಚ್ಛಿಸಿದರೆ ಹೆಸರು ಮತ್ತು ವಿಳಾಸಗಳನ್ನು ಮುಚ್ಚಿ."
+};
+const GUIDE = {
+  en: "If this is about domestic violence, arrest, or a child, please contact NALSA 15100 or your district DLSA.",
+  hi: "यदि यह घरेलू हिंसा, गिरफ्तारी, या एक बालक के बारे में है, तो कृपया NALSA 15100 या अपने जिले के DLSA से संपर्क करें।",
+  kn: "ಇದು ಗೃಹ ಹಿಂಸಾಚಾರ, ಜೈಲಿಗೆ ಹಾಕುವಿಕೆ ಅಥವಾ ಮಕ್ಕಳ ಬಗ್ಗೆ ಇದ್ದರೆ, ದಯವಿಟ್ಟು NALSA 15100 ಅಥವಾ ನಿಮ್ಮ ಜಿಲ್ಲೆ DLSA ಸಂಪರ್ಕಿಸಿ."
+};
+const VOICE = { en: "en-IN", hi: "hi-IN", kn: "kn-IN" };
+const $ = id => document.getElementById(id);
+let lang = "en", files = [], session = "", timer = null, currentBrief = null;
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const isPdf = f => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+const HEADS = ["what is this","who sent it","what do they want","deadline","what happens if you ignore it","your options","documents to gather","free legal help"];
+
+// Safe mini-markdown: escapes first, then turns headings into section cards, "- " into lists, **bold** into <b>.
+function md(src) {
+  let out = "", sec = false, ul = false;
+  const endUl = () => { if (ul) { out += "</ul>"; ul = false; } };
+  const endSec = () => { endUl(); if (sec) { out += "</section>"; sec = false; } };
+  const inl = s => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  for (let L of esc(src).split("\n")) {
+    L = L.trim();
+    if (!L) { endUl(); continue; }
+    const clean = L.replace(/[*_#⏰]/g, "").replace(/[?:]\s*$/, "").trim().toLowerCase();
+    if (/^#{1,4}\s/.test(L) || HEADS.includes(clean)) {
+      endSec();
+      out += '<section class="sec' + (/deadline|⏰/i.test(L) ? " dl" : "") + '"><h3>' + inl(L.replace(/^#+\s*/, "").replace(/^\*\*|\*\*$/g, "")) + "</h3>";
+      sec = true; continue;
+    }
+    const li = L.match(/^[-*•]\s+(.*)$/);
+    if (li) { if (!ul) { out += "<ul>"; ul = true; } out += "<li>" + inl(li[1]) + "</li>"; }
+    else { endUl(); out += "<p>" + inl(L) + "</p>"; }
+  }
+  endSec();
+  return out;
+}
+
+function applyLang() {
+  const d = I[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach(e => { e.textContent = d[e.dataset.i]; });
+  $("consentText").textContent = CONSENT[lang];
+  $("helpText").textContent = GUIDE[lang];
+  $("q").placeholder = d.ph;
+  $("lang").value = lang;
+  renderThumbs();
+}
+$("lang").onchange = e => { lang = e.target.value; applyLang(); };
+
+$("agree").onclick = () => { $("consent").hidden = true; $("app").hidden = false; loadDistricts(); };
+
+async function loadDistricts() {
+  try {
+    const r = await fetch("/districts.csv");
+    if (!r.ok) return;
+    const seen = new Set();
+    (await r.text()).trim().split("\n").slice(1).forEach(l => {
+      const n = l.split(",")[0].replace(/^"|"$/g, "").trim();
+      if (n && !seen.has(n)) { seen.add(n); const o = document.createElement("option"); o.value = n; o.textContent = n; $("dist").appendChild(o); }
+    });
+  } catch (e) {}
+}
+
+// Shrink big phone photos before upload: faster, and less likely to fail.
+async function shrink(f) {
+  if (!f.type.startsWith("image/") || f.type === "image/gif") return f;
+  try {
+    const bmp = await createImageBitmap(f);
+    const s = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const b = await new Promise(r => c.toBlob(r, "image/jpeg", 0.85));
+    return b ? new File([b], f.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : f;
+  } catch (e) { return f; }
+}
+$("pick").onclick = () => $("files").click();
+$("files").onchange = async e => {
+  const add = [...e.target.files]; e.target.value = "";
+  const pdf = add.find(isPdf);
+  if (pdf) files = [pdf];
+  else { files = files.filter(f => !isPdf(f)); for (const f of add) if (files.length < 3) files.push(await shrink(f)); }
+  renderThumbs();
+};
+function renderThumbs() {
+  const t = $("thumbs"); t.innerHTML = "";
+  files.forEach((f, i) => {
+    const w = document.createElement("div"); w.className = "th";
+    if (isPdf(f)) { w.innerHTML = '<div class="pdf">PDF<br><small></small></div>'; w.querySelector("small").textContent = f.name; }
+    else { const im = new Image(); im.src = URL.createObjectURL(f); im.alt = ""; w.appendChild(im); }
+    const b = document.createElement("button"); b.type = "button"; b.className = "x"; b.textContent = "×";
+    b.setAttribute("aria-label", I[lang].rm); b.onclick = () => { files.splice(i, 1); renderThumbs(); };
+    w.appendChild(b); t.appendChild(w);
+  });
+}
+
+$("helpBtn").onclick = () => { const h = $("helpBox"); h.hidden = !h.hidden; $("helpBtn").setAttribute("aria-expanded", String(!h.hidden)); };
+
+function setLoading(on) {
+  $("load").hidden = !on; $("go").disabled = on;
+  clearInterval(timer);
+  if (on) { let n = 0; const steps = ["s1", "s2", "s3"]; $("lstep").textContent = I[lang].s1;
+    timer = setInterval(() => { n = Math.min(n + 1, 2); $("lstep").textContent = I[lang][steps[n]]; }, 4500); }
+}
+const showErr = m => { $("err").textContent = m; $("err").hidden = false; };
+
+$("go").onclick = async () => {
+  $("err").hidden = true;
+  if (!files.length) return showErr(I[lang].nofile);
+  setLoading(true);
+  const fd = new FormData();
+  files.forEach(f => fd.append("files", f, f.name));
+  fd.append("language", lang); fd.append("received_date", $("rd").value); fd.append("district", $("dist").value);
+  try {
+    const r = await fetch("/analyze", { method: "POST", body: fd });
+    if (!r.ok) { let m = ""; try { m = (await r.json()).detail || ""; } catch (e) {} throw new Error(String(m).slice(0, 140)); }
+    show(await r.json());
+  } catch (e) { showErr(I[lang].err + (e.message ? " (" + e.message + ")" : "")); }
+  setLoading(false);
+};
+
+function show(d) {
+  session = d.session_id;
+  currentBrief = d.lawyer_brief || null;
+  $("briefBox").hidden = !currentBrief;
+  $("downloadBrief").disabled = !currentBrief;
+  $("briefStatus").textContent = I[lang].briefStatus;
+  $("urg").hidden = !d.urgent;
+  $("ans").innerHTML = md(d.answer_markdown);
+  $("chat").innerHTML = ""; $("fb").hidden = true;
+  $("up1").disabled = $("dn1").disabled = false;
+  $("up").hidden = true; $("out").hidden = false;
+  window.scrollTo(0, 0); $("ans").focus();
+}
+
+$("lis").hidden = !window.speechSynthesis;
+$("lis").onclick = () => {
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); $("lis").textContent = I[lang].listen; return; }
+  const u = new SpeechSynthesisUtterance($("ans").innerText); u.lang = VOICE[lang]; u.rate = 0.9;
+  u.onend = () => { $("lis").textContent = I[lang].listen; };
+  speechSynthesis.speak(u); $("lis").textContent = I[lang].stop;
+};
+$("prt").onclick = () => window.print();
+$("downloadBrief").onclick = () => {
+  if (!currentBrief) return;
+  const blob = new Blob([JSON.stringify(currentBrief, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "nyaya-saathi-brief-" + String(currentBrief.brief_id || "draft") + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
+$("saveToWorkspace").onclick = async () => {
+  if (!currentBrief) return;
+  const approved = confirm("Saving will store this extracted brief and review metadata on the server. The original upload is not stored by this workspace. Continue only if you are authorised to save this information.");
+  if (!approved) return;
+  const reviewerToken = prompt("Enter the server's REVIEWER_API_TOKEN. It will be sent only with this request and will not be saved by this page.");
+  if (!reviewerToken) return;
+  const reviewerLabel = prompt("Reviewer label (self-reported, not verified identity):", "reviewer") || "reviewer";
+  const defaultTitle = String((currentBrief.document || {}).type || "legal notice").replaceAll("_"," ") + " intake";
+  const title = prompt("Case title. Avoid including unnecessary personal identifiers:", defaultTitle);
+  if (title === null) return;
+  try {
+    const response = await fetch("/review/cases", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","X-Reviewer-Token":reviewerToken,"X-Reviewer-Label":reviewerLabel},
+      body: JSON.stringify({brief:currentBrief,title})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "Could not save to review workspace.");
+    const openNow = confirm("Saved as case " + data.case_id + ". Open the lawyer review workspace now?");
+    if (openNow) window.location.href = "/review?case_id=" + encodeURIComponent(data.case_id);
+  } catch (error) {
+    showErr(I[lang].err + (error.message ? " (" + error.message + ")" : ""));
+  }
+};
+
+async function rate(v) {
+  $("up1").disabled = $("dn1").disabled = true;
+  try { await fetch("/feedback", { method: "POST", body: new URLSearchParams({ session_id: session, rating: v }) }); } catch (e) {}
+  $("fb").hidden = false;
+}
+$("up1").onclick = () => rate(1); $("dn1").onclick = () => rate(-1);
+
+function bubble(cls, html) {
+  const b = document.createElement("div"); b.className = "bub " + cls; b.innerHTML = html;
+  $("chat").appendChild(b); b.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+async function ask() {
+  const q = $("q").value.trim(); if (!q) return;
+  bubble("me", esc(q)); $("q").value = ""; $("qs").disabled = $("q").disabled = true;
+  try {
+    const r = await fetch("/chat", { method: "POST", body: new URLSearchParams({ session_id: session, message: q }) });
+    if (!r.ok) throw new Error();
+    bubble("bot", md((await r.json()).answer_markdown));
+  } catch (e) { bubble("bot", esc(I[lang].err)); }
+  $("qs").disabled = $("q").disabled = false; $("q").focus();
+}
+$("qs").onclick = ask;
+$("q").onkeydown = e => { if (e.key === "Enter") ask(); };
+
+$("again").onclick = () => {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  files = []; renderThumbs(); $("rd").value = ""; $("out").hidden = true; $("up").hidden = false; window.scrollTo(0, 0);
+};
+
+applyLang();
