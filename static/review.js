@@ -76,7 +76,7 @@ async function connect() {
     $("disconnect").hidden = false;
     $("token").value = "";
     $("reviewer").value = "";
-    feedback("authMessage","Connected. Token remains only in this page's memory.","success");
+    feedback("message","Connected. Token remains only in this page's memory.","success");
     const caseId = new URLSearchParams(location.search).get("case_id");
     if (caseId) await openCase(caseId);
   } catch (err) {
