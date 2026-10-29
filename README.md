@@ -1,33 +1,52 @@
-# Nyaya Saathi — legal notice explainer
+# Nyaya-Saathi — legal notice explainer and lawyer-intake draft
 
-Nyaya Saathi helps people in India understand a legal notice. The user uploads a photo of the notice (up to 3 pages, or one PDF) and gets a plain-language explanation in **English, Hindi or Kannada**: what the notice is, who sent it, what they want, the deadline, the options, the documents to gather, and where to get free legal help. It is built for people with little legal background and for legal aid volunteers who support them.
+Nyaya-Saathi helps people in India understand a legal notice in simple language and creates a **draft lawyer-intake brief** from the same extraction. It supports English, Hindi and Kannada.
 
-> **This is legal information, not legal advice.** Always confirm with a lawyer or legal aid volunteer. NALSA helpline: **15100**.
+The initial workflow is deliberately limited:
 
-Built with Google ADK, Gemini, and FastAPI in the AgentFoundry IDE.
+1. Upload a PDF by itself or up to three document images.
+2. Extract the document type, parties, dates/periods, cited provisions and demands.
+3. Explain the notice in the selected language.
+4. Create a JSON lawyer-intake brief containing the extracted facts, source quotations when available, dates/periods, missing information and a lawyer-review checklist.
+5. Download the brief locally for professional review.
+
+> **This is legal information, not legal advice.** The brief is a draft and must be checked against the original document by a qualified professional. NALSA helpline: **15100**.
+
+Built with Google ADK, Gemini and FastAPI.
 
 ## How it works
 
-1. **Read:** `pipeline.py` sends the notice image(s) to Gemini and gets back structured JSON: document type, parties, dates, sections cited, demands, and the exact original text for each fact.
-2. **Know:** the agent (`agent.py`) calls tools in `tools/legal_tools.py` that read your own files: `knowledge/<doc_type>.md` notes, deadline rules, legal aid eligibility rules, and a district list of legal services authorities (`rules/`, `data/`).
-3. **Explain:** the agent writes the answer in the user's language under fixed rules. It only states dates, sections, amounts and names found in the notice, the notes, or tool results. It never predicts outcomes, drafts replies, or tells anyone to ignore a notice. Arrest, warrant, domestic violence, or a deadline within 7 days triggers an urgent message pointing to legal aid.
+- `pipeline.py` requests structured extraction from Gemini. It now asks for page numbers and short evidence quotations for important facts. Those quotations are model-extracted pointers, not inherently verified facts.
+- `briefs.py` creates a structured draft for intake/review and labels it `draft_pending_lawyer_review`.
+- For PDFs with a native text layer, the app checks whether extracted quotations can be found in the corresponding page text. This is only a textual matching check, not legal verification. Scanned PDFs and image uploads may have no independent text layer, so quotations remain unverified.
+- `rules/deadlines.py` surfaces dates written in the notice. Periods such as “within 15 days” are calculated only when the stated trigger date is known, and the result is marked provisional. Unverified statutory fallback rules in `rules/deadline_rules.yaml` are not applied.
+- The ADK agent provides the plain-language explanation and follow-up conversation. Legal knowledge files are treated as unavailable when they are empty or still contain placeholders.
 
-Supported document types: `court_summons`, `eviction_or_rent`, `cheque_bounce_138`, `labour_or_wage`, `scheme_rejection`, `family_or_maintenance`, `other`. Unreadable or `other` documents are not explained; the user is pointed to legal aid instead.
+## Current limits and safety
+
+- Upload limit: 12 MiB per file, 20 MiB combined, up to three images or one PDF, with a 20-page cap for PDFs in this prototype.
+- The JSON lawyer brief is a draft, not an approved legal opinion. A matching quote does not establish that a claim is true or legally valid.
+- Dates stated in a notice must be distinguished from legal deadlines. Dates calculated from stated periods are provisional and require review. Bundled statutory rules are skipped unless expressly verified with a source URL and review date.
+- The app does not save uploaded originals to application storage. The file content is sent to Gemini for extraction, and extracted facts are sent to the agent. The Google service terms and data-handling settings therefore matter. Do not upload real client documents without appropriate consent and an approved data-processing configuration.
+- The web app deliberately does not wrap requests in AgentFoundry's full-input recorder because the agent payload may include names, case numbers and extracted document facts. The command-line `python agent.py` flow still uses `recorder.py`; do not pass real client information through that path until recording is disabled or appropriately redacted.
+- Web sessions use random in-memory ADK user IDs and expire from the app's session registry after 45 minutes. This is not authentication, durable storage or a multi-instance session system; sessions are lost on restart.
+- The Karnataka district legal-aid CSV still contains placeholder records. The app must not be treated as having a verified district contact directory until those rows are replaced with checked official data.
+- Legal rules, knowledge notes, income limits and legal-aid contacts must be reviewed against authoritative sources by a qualified professional before real users rely on them.
 
 ## Quick start
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 Create `.env.local` in the project root (never commit it):
 
-```
+```dotenv
 GOOGLE_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-3.5-flash-lite   # optional; extraction model
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
-Get a key at https://aistudio.google.com/apikey. The agent itself can also run on Vertex AI (`GOOGLE_GENAI_USE_VERTEXAI=TRUE`, `GOOGLE_CLOUD_PROJECT`), but `pipeline.py` currently requires `GOOGLE_API_KEY`.
+Get a key at https://aistudio.google.com/apikey. The extraction pipeline currently requires `GOOGLE_API_KEY`. Configure Vertex AI separately before switching the agent deployment to Vertex.
 
 Run the web app:
 
@@ -35,76 +54,60 @@ Run the web app:
 uvicorn app:app --reload
 ```
 
-Open http://localhost:8000. Test extraction alone (no web app), which prints the real error if something fails:
+Open http://localhost:8000. The analysis response includes `session_id`, `answer_markdown`, `urgent` and `lawyer_brief`. The UI provides a local JSON download of the draft brief.
+
+Run automated tests:
 
 ```bash
-python test_pipeline.py path/to/notice.jpg [page2.jpg ...]
+python -m pip install pytest
+pytest -q
 ```
 
-Run the agent from the command line: `python agent.py "your prompt"`.
+Test extraction directly with a fictional or properly consented test document:
+
+```bash
+python test_pipeline.py path/to/notice.jpg
+```
 
 ## Project layout
 
 | Path | Purpose |
 |---|---|
-| `app.py` | FastAPI web app and API |
-| `pipeline.py` | Gemini extraction of notice facts |
-| `agent.py` | ADK agent: instructions and registered tools |
-| `tools/legal_tools.py` | Tools: legal context, deadlines, legal aid eligibility, legal aid centres |
-| `rules/` | Deadline, legal aid, and district-lookup logic and rule files |
-| `knowledge/` | One notes file per document type (`<doc_type>.md`) |
-| `data/dlsa_karnataka.csv` | District legal services authority contacts (Karnataka) |
-| `static/index.html` | Mobile-first web UI (English, Hindi, Kannada) |
-| `metrics.py` | Anonymous usage counts |
-| `recorder.py`, `sidecar.py`, `memory.py` | Generated by AgentFoundry (run recording, guardrails, memory) |
-| `.codenow/agent-studio/` | AgentFoundry manifest, prompts, evals, skills |
+| `app.py` | FastAPI app, upload validation, session handling, API endpoints |
+| `pipeline.py` | Gemini structured extraction, page-aware facts and evidence pointers |
+| `briefs.py` | Structured lawyer-intake draft and evidence status |
+| `uploads.py` | Server-side file signature and size validation |
+| `agent.py` | Google ADK agent and safety instructions |
+| `tools/legal_tools.py` | Legal context, deadline, legal-aid eligibility and centre tools |
+| `rules/` | Deadline, legal-aid and district-lookup logic |
+| `knowledge/` | Notes for supported document types; placeholders are not treated as reviewed notes |
+| `data/dlsa_karnataka.csv` | Karnataka district legal services contacts (currently contains placeholders) |
+| `static/index.html` | Mobile-first web UI in English, Hindi and Kannada |
+| `metrics.py` | Aggregate event counters without document text |
+| `recorder.py`, `sidecar.py`, `memory.py` | AgentFoundry-generated local tooling |
 
 ## API
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /` | Web UI |
-| `POST /analyze` | Form: `files` (1-3 images or one PDF), `language` (`en`/`hi`/`kn`), optional `received_date` (YYYY-MM-DD) and `district`. Returns `session_id`, `answer_markdown`, `urgent` |
-| `POST /chat` | Form: `session_id`, `message`. Follow-up question about the same notice |
+| `POST /analyze` | Multipart form: `files`, `language` (`en`/`hi`/`kn`), optional `received_date` and `district`; returns explanation and lawyer-intake draft |
+| `POST /chat` | Form: `session_id`, `message`; session-bound follow-up |
 | `POST /feedback` | Form: `session_id`, `rating` (`1` or `-1`) |
-| `GET /districts.csv` | District list for the UI dropdown |
-| `GET /impact` | Aggregate usage counts |
-| `GET /health` | Health check (returns `ok`) |
+| `GET /districts.csv` | District options |
+| `GET /impact` | Aggregate event counts |
+| `GET /health` | Health check |
 
-Sessions are kept in memory, so they are lost on restart and not shared between server instances.
+## Deployment
 
-## Deploy on Render (free tier)
+The Dockerfile expects the repository root as its build context. Set `GOOGLE_API_KEY` and any model configuration through the hosting provider's secret/environment settings, never in source control. Run tests before deploying.
 
-1. Push this project to a Git repository.
-2. In Render, create a **Web Service** and connect the repository.
-3. Build command: `pip install -r requirements.txt` (use `pip install -r nyaya-saathi/requirements.txt` only if the project sits in a subfolder of your repo).
-4. Start command: `uvicorn app:app --host 0.0.0.0 --port ${PORT}`
-5. Set environment variables in Render's dashboard, never in the repo:
-   - `GOOGLE_API_KEY`: your Gemini key
-   - `GEMINI_MODEL`: optional
-   - `SUPABASE_URL`, `SUPABASE_KEY`: optional, for synced analytics
-   - `SYNC`: `false`
-6. Set the health check path to `/health`.
+## Before real use
 
-Free-tier services may sleep when idle, so the first request after a pause can be slow.
-
-## AgentFoundry
-
-Open the **Test** tab to chat with the agent, **Tools** to add tools, **Skills** to add documents, and **Publish** to push to the marketplace. Run recordings appear in the **Runs** tab (stored under `.codenow/runs/`). The security policy is in `defenseclaw.yaml`; it currently runs in `observe` mode, which logs but does not block.
-
-## Privacy and limits
-
-- Uploaded images are processed in memory and are not saved by the app.
-- Analytics record only event type, document type, and language.
-- Notice content is sent to Google's Gemini API. On the free tier, Google may use inputs to improve its products, as the consent screen says. For real client data, use a paid or Vertex AI setup with no-training terms.
-- AgentFoundry's run recorder writes each run's input and output, which can include names and case numbers from the extracted facts, to `.codenow/runs/`. **Turn this off or redact it before any real use**, and keep this README and the consent text in line with what is actually stored.
-- Legal rules, deadline logic, income limits, and district contacts must be **verified by a lawyer** before real users rely on them. District data currently covers Karnataka only.
-
-## Before real use: checklist
-
-- [ ] A lawyer reviews `knowledge/` notes and `rules/`, with sources and a last-checked date
-- [ ] Legal aid income limits verified against the state authority
-- [ ] Test set of sample notices (all document types, three languages, poor-quality photos) with expected answers
-- [ ] Hindi and Kannada text reviewed by native speakers
-- [ ] Run recorder disabled or redacted, and consent text matches
-- [ ] Paid or no-training Gemini setup for real client data
+- [ ] Legal knowledge notes and jurisdiction rules are reviewed, sourced and dated by a qualified professional.
+- [ ] District legal-aid directory placeholders are replaced with verified official contacts.
+- [ ] Source quotations, date extraction and no-date assumptions are tested against a reviewed benchmark.
+- [ ] Hindi and Kannada explanations are reviewed by proficient speakers.
+- [ ] Privacy notice matches the configured model provider and any recording/persistence.
+- [ ] Real-client data is not sent through the CLI recorder and is handled only under an approved data-processing arrangement.
+- [ ] A qualified professional reviews the intake brief before it is used for a matter.
