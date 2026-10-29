@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+import unicodedata
 import uuid
 
 
@@ -24,11 +25,31 @@ def _page_number(value: Any) -> int | None:
         return None
 
 
+def _normalise_quote(value: str) -> str:
+    """Normalise Unicode and whitespace for conservative quote matching."""
+    return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+
+
+def _quote_status(quote: str, page_number: int | None, source_text_by_page: dict[int, str]) -> str:
+    if not source_text_by_page:
+        return "not_verifiable"
+    if page_number is not None:
+        source = source_text_by_page.get(page_number)
+        if source is None:
+            return "page_text_unavailable"
+        return "matched_in_source_text" if _normalise_quote(quote) in _normalise_quote(source) else "not_found_in_source_text"
+    for source in source_text_by_page.values():
+        if _normalise_quote(quote) in _normalise_quote(source):
+            return "matched_in_source_text"
+    return "not_found_in_source_text"
+
+
 def build_lawyer_brief(
     extraction: Any,
     deadlines: list[dict] | None = None,
     *,
     language: str = "en",
+    source_text_by_page: dict[int, str] | None = None,
 ) -> dict:
     """Return a JSON-serializable lawyer-intake draft.
 
@@ -92,12 +113,16 @@ def build_lawyer_brief(
         quote = str(span.get("quote") or "").strip()
         if not quote:
             continue
+        page_number = _page_number(span.get("page_number"))
+        quote_status = _quote_status(quote, page_number, source_text_by_page or {})
         evidence_spans.append({
             "field": span.get("field"),
             "value": span.get("value"),
             "quote": quote,
-            "page_number": _page_number(span.get("page_number")),
-            # The model's quote is a locator, not independent verification.
+            "page_number": page_number,
+            # Exact matching against extractable PDF text is a useful check, not
+            # proof of legal correctness. Human review remains required.
+            "quote_match_status": quote_status,
             "verification_status": "requires_human_review",
         })
 
@@ -130,6 +155,10 @@ def build_lawyer_brief(
         information_to_confirm.append("Document type classification has low confidence.")
     if not evidence_spans:
         information_to_confirm.append("No supporting evidence spans were returned; check important facts against the original.")
+    elif any(span["quote_match_status"] == "not_found_in_source_text" for span in evidence_spans):
+        information_to_confirm.append("Some extracted quotations were not found in the available source text; review these fields against the original.")
+    elif any(span["quote_match_status"] in ("not_verifiable", "page_text_unavailable") for span in evidence_spans):
+        information_to_confirm.append("Some quotations could not be independently checked against extractable source text; verify them against the original.")
     if not parties:
         information_to_confirm.append("Parties could not be reliably identified.")
     for item in deadlines:
