@@ -5,7 +5,7 @@
     {
       "case_id": "synthetic-rent-001",
       "title": "Synthetic rent demand",
-      "notice_text": "SYNTHETIC DEMONSTRATION NOTICE - NOT A REAL LEGAL NOTICE\nDate: 12 October 2026\nFrom: Kavita Sharma (property owner)\nTo: Arjun Mehta (tenant)\nProperty: Flat 12B, Demo Residency, Bengaluru.\nThis fictional notice states that rent of Rs. 18000 for September 2026 is claimed unpaid.\nPlease pay the claimed rent of Rs. 18000 within 15 days after receipt of this letter.\nThis text is solely a fictional software test sample. It makes no claim about a valid legal deadline.",
+      "notice_text": "NOTICE ABOUT CLAIMED UNPAID RENT\nDate: 12 October 2026\nFrom: Kavita Sharma (property owner)\nTo: Arjun Mehta (tenant)\nProperty: Flat 12B, Orchid Residency, Bengaluru.\nThe sender states that rent of Rs. 18000 for September 2026 remains unpaid.\nPlease pay the claimed rent of Rs. 18000 within 15 days after receipt of this letter.",
       "expected": {
         "document_type": "eviction_or_rent",
         "readable": true,
@@ -42,7 +42,7 @@
     {
       "case_id": "synthetic-summons-001",
       "title": "Synthetic court summons",
-      "notice_text": "SYNTHETIC DEMONSTRATION SUMMONS - NOT A REAL COURT DOCUMENT\nSample Civil Court, Bengaluru\nFrom: Sample Civil Court\nTo: Rohan Iyer (person summoned)\nFile No.: CIV/DEMO/2026/42\nDate: 20 October 2026\nYou are requested to appear at Sample Civil Court, Room 3, on 18 November 2026 at 10:30 AM.\nThis fictional text is created only to test software extraction. It does not correspond to any real case or court.",
+      "notice_text": "SUMMONS TO APPEAR\nSample Civil Court, Bengaluru\nFrom: Sample Civil Court\nTo: Rohan Iyer (person summoned)\nFile No.: CIV/2026/042\nDate: 20 October 2026\nYou are required to appear at Sample Civil Court, Room 3, on 18 November 2026 at 10:30 AM.",
       "expected": {
         "document_type": "court_summons",
         "readable": true,
@@ -70,7 +70,7 @@
         ],
         "evidence_phrases": [
           "Rohan Iyer",
-          "CIV/DEMO/2026/42",
+          "CIV/2026/042",
           "18 November 2026"
         ]
       }
@@ -78,7 +78,7 @@
     {
       "case_id": "synthetic-cheque-001",
       "title": "Synthetic cheque-related notice",
-      "notice_text": "SYNTHETIC DEMONSTRATION NOTICE - NOT A REAL LEGAL NOTICE\nDate: 22 October 2026\nFrom: Advocate Meera Rao\nTo: Dev Malhotra\nThe fictional sender states that cheque number DEMO-004 for Rs. 25000 was issued on 02 October 2026 and returned unpaid on 05 October 2026.\nThis fictional text refers to Section 138 of the Negotiable Instruments Act, 1881. The sender requests payment or a written response about the stated claim.\nNo reply period or legal deadline is specified in this sample. This document is only a software test fixture and does not describe a real dispute.",
+      "notice_text": "NOTICE REGARDING DISHONOURED CHEQUE\nDate: 22 October 2026\nFrom: Advocate Meera Rao\nTo: Dev Malhotra\nThe sender states that cheque number CHQ-2048 for Rs. 25000 was issued on 02 October 2026 and returned unpaid on 05 October 2026.\nThis notice refers to Section 138 of the Negotiable Instruments Act, 1881. The sender requests payment or a written response about the stated claim.\nThe notice does not state a reply period.",
       "expected": {
         "document_type": "cheque_bounce_138",
         "readable": true,
@@ -115,7 +115,7 @@
         "evidence_phrases": [
           "Meera Rao",
           "Dev Malhotra",
-          "DEMO-004",
+          "CHQ-2048",
           "Section 138"
         ]
       }
