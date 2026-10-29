@@ -6,3 +6,5 @@
 {"id": "1d1dd193-f645-46b1-99a9-f4b00a81c910", "created_at": "2026-10-28T21:40:45.621361Z", "event_type": "unreadable", "doc_type": "unknown", "language": "en"}
 {"id": "6d6353e4-fad2-432b-8d60-16bf91292dd2", "created_at": "2026-10-28T21:40:52.550357Z", "event_type": "unreadable", "doc_type": "unknown", "language": "en"}
 {"id": "f1373bb7-637f-4637-8526-cae515685044", "created_at": "2026-10-28T21:41:14.186606Z", "event_type": "notice_explained", "doc_type": "eviction_or_rent", "language": "en"}
+{"id": "5bce239d-6c65-4a0c-ab2b-b5047ce70e14", "created_at": "2026-10-29T15:37:02.073175Z", "event_type": "notice_explained", "doc_type": "eviction_or_rent", "language": "en"}
+{"id": "6cf11766-fbe1-4631-b003-da92446209e9", "created_at": "2026-10-29T15:38:12.878605Z", "event_type": "sensitive_route", "doc_type": "eviction_or_rent", "language": "en"}

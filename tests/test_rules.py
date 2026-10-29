@@ -3,54 +3,118 @@ from rules.deadlines import compute_deadlines
 from rules.legal_aid import check_eligibility
 from rules.dlsa import find_center
 
+NOTICE = {'label': 'notice date', 'date': '2026-10-15', 'original_text': '15 October 2026'}
+PERIOD = {'label': 'pay within', 'date': None, 'original_text': 'within 15 (fifteen) days',
+          'duration_days': 15, 'duration_from': 'receipt'}
 
+
+def by_label(res, text):
+    return [r for r in res if text in r['label']]
+
+
+# ---- deadlines: original tests -------------------------------------------------
 def test_cheque_bounce_with_receipt():
-    dates = []
-    doc_type = 'cheque_bounce_138'
-    received_date = '2026-10-01'
-    today = '2026-10-05'
-    res = compute_deadlines(doc_type, dates, received_date, today)
-    # Should include the pay within 15 days rule
-    pay_rules = [r for r in res if 'pay within' in r['label']]
-    assert len(pay_rules) == 1
-    assert pay_rules[0]['due_date'] == '2026-10-16'
-    assert pay_rules[0]['days_left'] == 11
-    assert pay_rules[0]['urgent'] is False
+    res = compute_deadlines('cheque_bounce_138', [], '2026-10-01', '2026-10-05')
+    pay = by_label(res, 'pay within')
+    assert len(pay) == 1
+    assert pay[0]['due_date'] == '2026-10-16'
+    assert pay[0]['days_left'] == 11
+    assert pay[0]['urgent'] is False
 
 
 def test_cheque_bounce_missing_receipt():
-    dates = []
-    doc_type = 'cheque_bounce_138'
-    received_date = None
-    today = '2026-10-05'
-    res = compute_deadlines(doc_type, dates, received_date, today)
-    pay_rules = [r for r in res if 'pay within' in r['label']]
-    assert len(pay_rules) == 1
-    assert pay_rules[0]['due_date'] is None
-    assert pay_rules[0]['basis'] == 'ask user when they received the notice'
+    res = compute_deadlines('cheque_bounce_138', [], None, '2026-10-05')
+    pay = by_label(res, 'pay within')
+    assert len(pay) == 1
+    assert pay[0]['due_date'] is None
+    assert pay[0]['basis'] == 'ask user when they received the notice'
 
 
 def test_urgent_hearing():
-    # hearing date is an explicit date soon
     dates = [{'label': 'hearing date', 'date': '2026-10-08', 'original_text': '08-10-2026'}]
-    doc_type = 'court_summons'
-    res = compute_deadlines(doc_type, dates, None, '2026-10-05')
-    hearing = [r for r in res if r['label'] == 'hearing date'][0]
+    res = compute_deadlines('court_summons', dates, None, '2026-10-05')
+    hearing = by_label(res, 'hearing date')[0]
     assert hearing['due_date'] == '2026-10-08'
     assert hearing['urgent'] is True
 
 
+# ---- deadlines: eviction notice (your sample) and the bugs fixed --------------
+def test_stated_period_counted_from_receipt():
+    res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], '2026-10-15', '2026-10-29')
+    pay = by_label(res, 'pay within')[0]
+    assert pay['due_date'] == '2026-10-30' and pay['days_left'] == 1
+    assert pay['urgent'] is True and pay['assumed'] is False
+
+
+def test_missing_receipt_assumes_notice_date():
+    res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], None, '2026-10-29')
+    pay = by_label(res, 'pay within')[0]
+    assert pay['due_date'] == '2026-10-30' and pay['assumed'] is True and pay['urgent'] is True
+    assert 'real receipt date' in pay['basis']
+
+
+def test_notice_date_is_informational_not_a_deadline():
+    res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], None, '2026-10-29')
+    n = by_label(res, 'notice date')[0]
+    assert n['informational'] is True and n['urgent'] is False and n['overdue'] is False
+
+
+def test_fallback_not_used_when_notice_states_a_period():
+    res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], '2026-10-15', '2026-10-29')
+    assert not by_label(res, 'fallback')
+
+
+def test_fallback_used_when_notice_states_no_period():
+    res = compute_deadlines('eviction_or_rent', [NOTICE], '2026-10-20', '2026-10-29')
+    fb = by_label(res, 'fallback')[0]
+    assert fb['due_date'] == '2026-11-04'
+
+
+def test_court_summons_written_statement_counts_from_receipt():
+    hearing = {'label': 'hearing date', 'date': '2026-12-01', 'original_text': '1 Dec 2026'}
+    res = compute_deadlines('court_summons', [hearing], None, '2026-10-29')
+    assert not by_label(res, 'appear on hearing date')      # no made-up deadline equal to the notice date
+    assert by_label(res, 'written statement')[0]['due_date'] is None
+
+
+def test_past_date_is_overdue_not_urgent():
+    dates = [{'label': 'hearing date', 'date': '2026-10-01', 'original_text': '1 Oct 2026'}]
+    h = by_label(compute_deadlines('court_summons', dates, None, '2026-10-05'), 'hearing date')[0]
+    assert h['overdue'] is True and h['urgent'] is False
+
+
+# ---- legal aid -----------------------------------------------------------------
 def test_eligibility_woman():
-    answers = {'woman': True, 'annual_income': 50000, 'income_limit': 100000}
-    r = check_eligibility(answers)
+    r = check_eligibility({'woman': True, 'annual_income': 50000})
     assert r['eligible'] is True
     assert any('woman' in reason.lower() for reason in r['reasons'])
 
 
 def test_ineligible_case():
-    answers = {'woman': False, 'annual_income': 200000, 'income_limit': 100000}
-    r = check_eligibility(answers)
+    r = check_eligibility({'woman': False, 'annual_income': 200000}, income_limit=100000)
     assert r['eligible'] is False
+
+
+def test_ai_supplied_income_limit_is_ignored(monkeypatch):
+    monkeypatch.setattr('rules.legal_aid.get_income_limit', lambda state='karnataka': None)
+    r = check_eligibility({'annual_income': 50000, 'income_limit': 99999999})
+    assert r['eligible'] is None
+    assert 'not on file' in r['next_step']
+
+
+def test_income_limit_comes_from_rules(monkeypatch):
+    monkeypatch.setattr('rules.legal_aid.get_income_limit', lambda state='karnataka': 300000)
+    assert check_eligibility({'annual_income': 250000})['eligible'] is True
+    assert check_eligibility({'woman': False, 'annual_income': 400000})['eligible'] is False
+
+
+def test_category_alias_and_yes_strings():
+    r = check_eligibility({'sc/st': 'yes'})
+    assert r['eligible'] is True and 'SC/ST' in r['reasons'][0]
+
+
+def test_not_enough_information():
+    assert check_eligibility({})['eligible'] is None
 
 
 def test_unknown_district():

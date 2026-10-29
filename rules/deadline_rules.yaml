@@ -1,5 +1,7 @@
-# Deadline rules for Indian legal notices
-# One entry per document type. Law student to verify and edit these entries.
+# Deadline rules for Indian legal notices.
+# One entry per document type. A law student / lawyer must verify every entry (verified: false until then).
+# Dates and periods written in the notice itself are read from the notice (see deadlines.py) and take priority.
+# A rule marked `fallback: true` is used only when the notice states no period of its own.
 
 cheque_bounce_138:
   description: "Section 138 NI Act: Pay the amount within 15 days of receipt of notice to avoid prosecution."
@@ -14,55 +16,41 @@ cheque_bounce_138:
 court_summons:
   description: "Court summons: appear on the hearing date; file written statement within statutory period for civil suits."
   relative_deadlines:
-    - label: "appear on hearing date"
-      days: 0
-      from: "notice_date"
     - label: "file written statement"
       days: 30
-      from: "notice_date"
-  notes: "CPC Order VIII Rule 1 provides 30 days to file written statement from service (verify local rules)."
+      from: "receipt"
+  notes: "The hearing date is an explicit date in the summons, so it is read from the document. CPC Order VIII Rule 1 gives 30 days from service of summons for the written statement (the court may extend; verify local rules)."
   source: "Code of Civil Procedure (CPC) — Order VIII, Rule 1 (provisional)"
   verified: false
 
 eviction_or_rent:
-  description: "Eviction or rent recovery notices: follow period stated in the notice; for monthly tenancies Section 106/106A/ relevant TPA practice may give 15 days."
+  description: "Eviction or rent recovery notices: follow the period stated in the notice; for monthly tenancies Section 106 TPA / local Rent Control rules may give 15 days."
   relative_deadlines:
-    - label: "follow notice period"
-      days: 0
-      from: "notice_date"
     - label: "monthly tenancy fallback: 15 days"
       days: 15
       from: "receipt"
+      fallback: true   # only used when the notice states no period of its own
   notes: "Use the period stated in the notice when present. Section 106 (TPA) or local Rent Control rules may provide 15-day periods for monthly tenancies — verify."
   source: "Transfer of Property Act / Rent Practice (provisional)"
   verified: false
 
 labour_or_wage:
   description: "Labour/wage recovery: follow statutory or scheme deadlines; where not stated, use notice timelines."
-  relative_deadlines:
-    - label: "follow notice period"
-      days: 0
-      from: "notice_date"
+  relative_deadlines: []
   notes: "Labour laws and municipal schemes vary; follow deadlines in the notice or scheme."
   source: "Labour laws / local authorities (provisional)"
   verified: false
 
 scheme_rejection:
   description: "Rejection of scheme/subsidy: follow appeal timelines stated in the notice."
-  relative_deadlines:
-    - label: "follow notice period"
-      days: 0
-      from: "notice_date"
+  relative_deadlines: []
   notes: "Appeal or review periods are usually specified in the scheme notice — use those."
   source: "Scheme rules (provisional)"
   verified: false
 
 family_or_maintenance:
   description: "Family or maintenance matters: follow dates stated in the notice or court order."
-  relative_deadlines:
-    - label: "follow notice period"
-      days: 0
-      from: "notice_date"
+  relative_deadlines: []
   notes: "Domestic violence or maintenance orders have specific procedures; use dates in the document."
   source: "Family law / Protection of Women (provisional)"
   verified: false

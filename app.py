@@ -26,7 +26,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from google.adk.runners import InMemoryRunner
 from google.genai.types import Content, Part
 
+from zoneinfo import ZoneInfo
 from pipeline import extract_notice
+from rules import deadlines as deadlines_mod, dlsa as dlsa_mod
 from recorder import record
 import agent as agent_module
 from tools import legal_tools
@@ -97,25 +99,14 @@ async def _run_agent_with_payload(payload_text: str, slug: str = 'nyaya-saathi')
     return {'session_id': session.id, 'answer': answer}
 
 
-def _compute_urgent_flag(extraction) -> bool:
-    # urgent if mentions_arrest_or_warrant or mentions_domestic_violence or any explicit date within 7 days
-    try:
-        if getattr(extraction, 'mentions_arrest_or_warrant', False) or getattr(extraction, 'mentions_domestic_violence', False):
-            return True
-        today = datetime.utcnow().date()
-        for d in getattr(extraction, 'dates', []) or []:
-            date_str = getattr(d, 'date', None)  # Pydantic object, not a dict
-            label = (getattr(d, 'label', '') or '').lower()
-            if date_str and 'notice' not in label:  # ignore the notice's own issue date
-                try:
-                    dt = datetime.strptime(date_str, '%Y-%m-%d').date()
-                    if 0 <= (dt - today).days <= 7:  # upcoming within 7 days
-                        return True
-                except Exception:
-                    pass
-    except Exception:
-        pass
-    return False
+IST = ZoneInfo('Asia/Kolkata')
+
+
+def _compute_urgent_flag(extraction, deadlines) -> bool:
+    """Urgent if arrest/warrant/domestic violence is mentioned, or any real deadline is due within 7 days or has passed."""
+    if getattr(extraction, 'mentions_arrest_or_warrant', False) or getattr(extraction, 'mentions_domestic_violence', False):
+        return True
+    return any(not d.get('informational') and (d.get('urgent') or d.get('overdue')) for d in deadlines)
 
 
 @app.post('/analyze')
@@ -153,11 +144,18 @@ async def analyze(
     log_event('notice_explained', getattr(extraction, 'doc_type', 'unknown'), language)
 
     # Prepare payload for agent: include extraction JSON and user's language, received_date and district
+    ext = extraction.model_dump()
+    today = datetime.now(IST).date().isoformat()
+    deadlines = deadlines_mod.compute_deadlines(ext['doc_type'], ext['dates'], received_date or None, today)
+    centers = dlsa_mod.find_center(district) if district else None
     payload_obj = {
-        'extraction': extraction.model_dump(),
+        'extraction': ext,
         'language': language,
         'received_date': received_date or None,
-        'district': district or None
+        'district': district or None,
+        'today': today,
+        'deadlines': deadlines,
+        'legal_aid_centers': centers,
     }
     payload_text = json.dumps(payload_obj, ensure_ascii=False)
 
@@ -167,7 +165,7 @@ async def analyze(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f'Agent run failed: {e}')
 
-    urgent = _compute_urgent_flag(extraction)
+    urgent = _compute_urgent_flag(extraction, deadlines)
 
     # If urgent, log event
     if urgent:

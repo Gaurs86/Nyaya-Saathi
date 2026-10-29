@@ -1,0 +1,7 @@
+# Annual income limit (in rupees) for free legal aid under Section 12(h) of the Legal Services Authorities Act.
+# Each State sets its own limit. Leave a value as null until it is verified with the State Legal Services Authority.
+# The AI must never supply this number: legal_aid.py reads it only from this file.
+income_limit_annual:
+  karnataka: null
+source: ""
+verified: false

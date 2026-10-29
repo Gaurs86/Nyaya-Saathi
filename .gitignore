@@ -6,3 +6,4 @@ __pycache__/
 nyaya-saathi/data/events.jsonl
 .DS_Store
 .codenow/
+files*

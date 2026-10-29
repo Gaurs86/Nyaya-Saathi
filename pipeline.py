@@ -51,6 +51,8 @@ class Date(BaseModel):
     label: str = Field(..., description='Label for the date (e.g. "notice date", "hearing date", "reply within")')
     date: Optional[str] = Field(None, description='Date in YYYY-MM-DD format, null if duration/unreadable')
     original_text: str = Field(..., description='Exact text copied from the document')
+    duration_days: Optional[int] = Field(None, description='For a period like "within 15 days": the number of days (15). Null for ordinary dates')
+    duration_from: Optional[str] = Field(None, description='What the period counts from: "receipt", "notice_date" or "other". Null for ordinary dates')
 
 
 class Section(BaseModel):
@@ -124,7 +126,7 @@ CRITICAL RULES:
 1. ONLY extract what is explicitly written in the document. NEVER guess, assume or invent dates, names, case numbers, or sections.
 2. Use null or empty arrays for missing/unreadable information.
 3. Copy exact text (original_text fields) from the document so it can be verified.
-4. For durations like "within 15 days", set date=null and put the phrase in original_text.
+4. For durations like "within 15 days", set date=null, put the phrase in original_text, and fill duration_days (e.g. 15) and duration_from ("receipt" if counted from receipt/service of the notice, "notice_date" if counted from the notice's own date, otherwise "other"). Leave both null for ordinary dates.
 5. Preserve the original language where important (e.g., act names, section numbers).
 6. If multiple pages are provided, extract all information across all pages as one integrated notice.
 7. Ensure all dates are in YYYY-MM-DD format if readable, otherwise null.

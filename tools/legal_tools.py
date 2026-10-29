@@ -3,7 +3,8 @@
 Plain Python functions with type hints and docstrings. These are registered
 as tools on the Agent; the ADK will wrap them automatically.
 """
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Any
 import json
 
@@ -29,7 +30,7 @@ def compute_deadlines_tool(doc_type: str, dates_json: str, received_date: str = 
     except Exception:
         dates = []
 
-    today = date.today().isoformat()
+    today = datetime.now(ZoneInfo('Asia/Kolkata')).date().isoformat()
     items = deadlines_mod.compute_deadlines(doc_type, dates, received_date or None, today)
     return json.dumps(items, ensure_ascii=False)
 
@@ -38,7 +39,9 @@ def check_legal_aid_tool(answers_json: str) -> str:
     """Check legal aid eligibility.
 
     Args:
-        answers_json: JSON string with answers (e.g. categories and 'annual_income' and 'income_limit')
+        answers_json: JSON string of true/false answers for these keys: sc_st, woman, child, person_with_disability,
+            victim_of_trafficking_or_begar, victim_of_mass_disaster, industrial_workman, person_in_custody,
+            plus optional annual_income (a number). Never include an income limit: it comes from the rules file.
 
     Returns:
         JSON string with the eligibility result {eligible, reasons, next_step}
