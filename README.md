@@ -1,6 +1,6 @@
 # Nyaya-Saathi — legal notice explainer and lawyer-intake draft
 
-Nyaya-Saathi helps people in India understand a legal notice in simple language and creates a **draft lawyer-intake brief** from the same extraction. It supports English, Hindi and Kannada.
+Nyaya-Saathi provides a lawyer-facing workspace for analyzing notices and reviewing **draft lawyer-intake briefs**. The extraction and explanation pipeline supports English, Hindi and Kannada.
 
 The initial workflow is deliberately limited:
 
@@ -8,7 +8,7 @@ The initial workflow is deliberately limited:
 2. Extract the document type, parties, dates/periods, cited provisions and demands.
 3. Explain the notice in the selected language.
 4. Create a JSON lawyer-intake brief containing the extracted facts, source quotations when available, dates/periods, missing information and a lawyer-review checklist.
-5. Download the brief locally for professional review.
+5. Save the draft to the review queue, where a lawyer can correct, approve, request changes, reject or export it.
 
 > **This is legal information, not legal advice.** The brief is a draft and must be checked against the original document by a qualified professional. NALSA helpline: **15100**.
 
@@ -29,7 +29,7 @@ Built with Google ADK, Gemini and FastAPI.
 - Dates stated in a notice must be distinguished from legal deadlines. Dates calculated from stated periods are provisional and require review. Bundled statutory rules are skipped unless expressly verified with a source URL and review date.
 - The app does not save uploaded originals to application storage. The file content is sent to Gemini for extraction, and extracted facts are sent to the agent. The Google service terms and data-handling settings therefore matter. Do not upload real client documents without appropriate consent and an approved data-processing configuration.
 - The web app deliberately does not wrap requests in AgentFoundry's full-input recorder because the agent payload may include names, case numbers and extracted document facts. The command-line `python agent.py` flow still uses `recorder.py`; do not pass real client information through that path until recording is disabled or appropriately redacted.
-- Web sessions use random in-memory ADK user IDs and expire from the app's session registry after 45 minutes. This is not authentication, durable storage or a multi-instance session system; sessions are lost on restart.
+- The lawyer UI requires the shared reviewer token for connecting, listing cases and analyzing documents. This is private-demo protection, not individual identity or production-grade authorization. Web ADK sessions use random in-memory user IDs and expire from the app's session registry after 45 minutes; they are not durable and are lost on restart.
 - The Karnataka district legal-aid CSV still contains placeholder records. The app must not be treated as having a verified district contact directory until those rows are replaced with checked official data.
 - Legal rules, knowledge notes, income limits and legal-aid contacts must be reviewed against authoritative sources by a qualified professional before real users rely on them.
 
@@ -51,10 +51,40 @@ Get a key at https://aistudio.google.com/apikey. The extraction pipeline current
 Run the web app:
 
 ```bash
+cd frontend
+npm ci
+npm run build
+cd ..
 uvicorn app:app --reload
 ```
 
 Open http://localhost:8000. The analysis response includes `session_id`, `answer_markdown`, `urgent` and `lawyer_brief`. The UI provides a local JSON download of the draft brief.
+
+### Frontend development
+
+The lawyer-facing workspace is built with React, TypeScript, Vite and Tailwind CSS. FastAPI remains the API and serves the production frontend build from `frontend/dist` at both `/` and `/review`.
+
+For frontend development, run the API in one terminal and Vite in another:
+
+```bash
+# Terminal 1
+uvicorn app:app --reload
+
+# Terminal 2
+cd frontend
+npm ci
+npm run dev
+```
+
+Open the Vite URL printed in the terminal (normally http://localhost:5173). Its development proxy forwards the existing API requests to FastAPI. To build the frontend for FastAPI or a local production-style run:
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+Then start FastAPI and open http://localhost:8000. The Docker build runs the frontend build automatically.
 
 Run automated tests:
 
@@ -87,7 +117,8 @@ python test_pipeline.py path/to/notice.jpg
 | `rules/` | Deadline, legal-aid and district-lookup logic |
 | `knowledge/` | Notes for supported document types; placeholders are not treated as reviewed notes |
 | `data/dlsa_karnataka.csv` | Karnataka district legal services contacts (currently contains placeholders) |
-| `static/index.html` | Mobile-first web UI in English, Hindi and Kannada |
+| `frontend/` | React, TypeScript, Vite and Tailwind lawyer workspace |
+| `static/` | Existing static review UI and supporting assets |
 | `metrics.py` | Aggregate event counters without document text |
 | `recorder.py`, `sidecar.py`, `memory.py` | AgentFoundry-generated local tooling |
 
@@ -95,8 +126,8 @@ python test_pipeline.py path/to/notice.jpg
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /` | Web UI |
-| `POST /analyze` | Multipart form: `files`, `language` (`en`/`hi`/`kn`), optional `received_date` and `district`; returns explanation and lawyer-intake draft |
+| `GET /` | Lawyer workspace UI |
+| `POST /analyze` | Reviewer-token-authenticated multipart form: `files`, `language` (`en`/`hi`/`kn`), optional `received_date` and `district`; returns explanation and lawyer-intake draft |
 | `POST /chat` | Form: `session_id`, `message`; session-bound follow-up |
 | `POST /feedback` | Form: `session_id`, `rating` (`1` or `-1`) |
 | `GET /districts.csv` | District options |
@@ -110,7 +141,7 @@ The Dockerfile expects the repository root as its build context. Set `GOOGLE_API
 
 ## Lawyer review workspace (Phase 2)
 
-The private demo workspace is available at `/review`. It provides a queue, editable brief fields, review decisions, audit history and approved PDF/DOCX exports.
+The lawyer-facing workspace is available at `/` and `/review`. It provides a dashboard, document intake, case list, editable brief fields, review decisions, audit history and approved PDF/DOCX exports.
 
 Configure a high-entropy token in the hosting environment or in the uncommitted `.env.local` file:
 
@@ -120,19 +151,22 @@ export REVIEWER_API_TOKEN="$(openssl rand -hex 32)"
 
 If using `.env.local`, add `REVIEWER_API_TOKEN=...` there and restart the server. The workspace is disabled when the token is not configured. Do not commit the token.
 
-From the result page, use **Save to lawyer review workspace**. This is an explicit operation that stores the extracted brief and review metadata in a local SQLite database; the original upload is not stored by this review store. The UI prompts for the token and sends it with the save request. Open `/review`, enter the token and a reviewer label, then select the case.
+Enter the token and a reviewer label to connect. The token stays in the page's memory and is sent only in reviewer API headers. Uploading a document through the workspace analyzes it and saves the extracted brief and review metadata in a local SQLite database; the original upload is not stored by the review store. The original source preview is available only in the current browser session after upload.
 
 Workspace capabilities:
 - List cases by `pending_review`, `changes_requested`, `approved`, or `rejected` status.
+- Show accurate dashboard totals using an authenticated status-summary endpoint.
 - Correct only the whitelisted brief fields: summary, parties, demands/claims, dates/periods, legal provisions cited and information to confirm.
 - Record a correction note and an audit event with before/after values for changed fields.
 - Request changes or reject intake. Approval requires explicit confirmations that the source, extracted facts and date/deadline language were reviewed.
 - Export PDF or DOCX only after the current brief has been approved. Saving corrections to an approved brief resets it to pending review and removes its active approval metadata.
 - Permanently delete a case and its event history.
 
-API routes (all require `X-Reviewer-Token`; `X-Reviewer-Label` is a self-reported display label):
-- `GET /review` — review workspace UI
+Reviewer API routes (all require `X-Reviewer-Token`; `X-Reviewer-Label` is a self-reported display label):
+- `GET /review` — lawyer workspace UI
+- `GET /review/summary` — status counts (requires reviewer token)
 - `GET /review/cases?status=pending_review` — list cases
+- `POST /analyze` — analyze a document for authenticated lawyer intake
 - `POST /review/cases` — create from a `schema_version: "1.0"` lawyer brief
 - `GET /review/cases/{case_id}` — retrieve a case and brief
 - `PUT /review/cases/{case_id}/brief` — save allowlisted corrections using `expected_revision`
@@ -171,4 +205,3 @@ python -m evals.run_evaluation --strict
 ```
 
 The evaluator is offline and deterministic after actual JSON outputs have been collected; it does not call Gemini itself. It measures extraction regression, not legal validity, legal deadline correctness, or legal advice quality. A benchmark used to assess real notices must have human-reviewed labels based on the original source. Never commit real notices or their outputs. The local `evals/actual/`, `evals/generated/` and `evals/reports/` paths are ignored by Git, but this is not encryption or access control.
-

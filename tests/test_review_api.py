@@ -39,12 +39,33 @@ def headers():
 def test_review_workspace_serves_page(client):
     response = client.get("/review")
     assert response.status_code == 200
-    assert "Lawyer Review Workspace" in response.text
+    assert "Nyaya" in response.text
 
 
 def test_review_api_rejects_missing_or_invalid_token(client):
     assert client.get("/review/cases").status_code == 401
     assert client.get("/review/cases", headers={"X-Reviewer-Token": "wrong"}).status_code == 401
+    upload = {"files": ("notice.jpg", b"test", "image/jpeg")}
+    assert client.post("/analyze", data={"language": "en"}, files=upload).status_code == 401
+
+
+def test_review_summary_requires_auth_and_counts_case_statuses(client):
+    assert client.get("/review/summary").status_code == 401
+    assert client.get("/review/summary", headers=headers()).json() == {
+        "total": 0,
+        "pending_review": 0,
+        "changes_requested": 0,
+        "approved": 0,
+        "rejected": 0,
+    }
+    client.post("/review/cases", headers=headers(), json={"brief": brief()})
+    assert client.get("/review/summary", headers=headers()).json() == {
+        "total": 1,
+        "pending_review": 1,
+        "changes_requested": 0,
+        "approved": 0,
+        "rejected": 0,
+    }
 
 
 def test_create_correct_approve_export_flow(client):

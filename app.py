@@ -44,6 +44,7 @@ from review_exports import export_pdf, export_docx, UnicodeFontUnavailable
 # App config
 PORT = int(os.getenv('PORT', '8000'))
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
+FRONTEND_DIST_DIR = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
 
 app = FastAPI(title='Nyaya Saathi Web')
 logger = logging.getLogger(__name__)
@@ -60,6 +61,9 @@ if CORS_ORIGINS:
         allow_headers=["Content-Type"],
     )
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
+frontend_assets_dir = os.path.join(FRONTEND_DIST_DIR, 'assets')
+if os.path.isdir(frontend_assets_dir):
+    app.mount('/assets', StaticFiles(directory=frontend_assets_dir), name='frontend-assets')
 
 # Simple feedback store
 FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), '.feedback.jsonl')
@@ -156,7 +160,19 @@ async def init_review_database():
 
 @app.get("/review")
 async def review_workspace():
+    frontend_index = os.path.join(FRONTEND_DIST_DIR, "index.html")
+    if os.path.isfile(frontend_index):
+        return FileResponse(frontend_index)
     return FileResponse(os.path.join(STATIC_DIR, "review.html"))
+
+
+@app.get("/review/summary")
+async def review_summary(
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    return JSONResponse(await asyncio.to_thread(review_store.status_counts))
 
 
 @app.get("/review/cases")
@@ -330,6 +346,9 @@ async def districts_csv():
 
 @app.get('/')
 async def index():
+    frontend_index = os.path.join(FRONTEND_DIST_DIR, 'index.html')
+    if os.path.isfile(frontend_index):
+        return FileResponse(frontend_index)
     return FileResponse(os.path.join(STATIC_DIR, 'index.html'))
 
 
@@ -376,8 +395,11 @@ async def analyze(
     files: List[UploadFile] = File(...),
     language: str = Form(...),
     received_date: Optional[str] = Form(''),
-    district: Optional[str] = Form('')
+    district: Optional[str] = Form(''),
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
 ):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
     # Validate language
     if language not in ('kn', 'hi', 'en'):
         raise HTTPException(status_code=400, detail='language must be kn, hi or en')

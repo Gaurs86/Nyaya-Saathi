@@ -3,123 +3,248 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nyaya Saathi</title>
+<meta name="theme-color" content="#f7f8fc">
+<title>Nyaya-Saathi · Legal Notice Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&family=Noto+Sans+Kannada:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Noto+Sans+Kannada:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#16202B;--bg:#F5F6F8;--pri:#1D4E89;--pri-d:#163B69;--line:#D9DEE5;--amber:#8A5300;--amber-bg:#FFF4D6;--red:#B3261E}
+:root{--ink:#17223b;--muted:#64708b;--bg:#f6f7fb;--paper:#fff;--line:#e3e7f0;--brand:#4f46e5;--brand-dark:#3730a3;--brand-pale:#eeedff;--teal:#0f766e;--teal-pale:#e6f7f3;--amber:#8a5300;--amber-bg:#fff6df;--red:#b42318;--red-bg:#fff0ee;--shadow:0 5px 24px rgba(30,41,59,.045)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 Mukta,"Noto Sans Kannada",system-ui,sans-serif}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;background:var(--pri-d);color:#fff}
-.brand{font-weight:800;font-size:1.3rem}
-.top select{width:auto;min-height:44px;padding:6px 10px;font-size:1rem}
-main{max-width:720px;margin:0 auto;padding:16px}
-.tag{margin:4px 0 16px;color:#4A5766}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
-h2{margin:0 0 6px;font-size:1.35rem;line-height:1.3}
-label{display:block;margin:14px 0 4px;font-weight:600}
-.muted{color:#4A5766;font-size:.92rem;margin:0}
-input,select{font:inherit;width:100%;min-height:52px;padding:10px 12px;border:2px solid #9AA6B4;border-radius:12px;background:#fff;color:var(--ink)}
-.btn{font:inherit;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:10px 18px;border-radius:12px;border:2px solid var(--pri);background:#fff;color:var(--pri);cursor:pointer;text-decoration:none}
-.btn.primary{background:var(--pri);color:#fff}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Mukta,"Noto Sans Kannada",system-ui,sans-serif}
+button,input,select,textarea{font:inherit}
+button,a,select,input,textarea{outline-offset:3px}
+:focus-visible{outline:3px solid #f0abfc;outline-offset:2px}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+.top{height:68px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 28px;position:sticky;top:0;z-index:20}
+.top-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:1.08rem;letter-spacing:-.02em}
+.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--brand-pale);color:var(--brand);font-size:1.35rem}
+.top-right{display:flex;align-items:center;gap:12px}
+.top select{width:auto;min-height:40px;padding:6px 32px 6px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.prototype-pill{border:1px solid var(--line);background:#f8fafc;color:var(--muted);border-radius:999px;padding:5px 10px;font-size:.82rem;white-space:nowrap}
+.tag{margin:0;color:var(--muted);font-size:.96rem}
+#consent{max-width:660px;margin:64px auto;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+#consent h1{margin:0 0 8px;font-size:1.55rem;line-height:1.25;letter-spacing:-.02em}
+#consentText{margin:10px 0 20px;color:var(--muted)}
+.app-shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:calc(100vh - 68px)}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:22px 14px 18px;display:flex;flex-direction:column;gap:24px}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 10px 4px;font-weight:800;line-height:1.15}
+.sidebar-brand small{display:block;font-weight:500;color:var(--muted);font-size:.78rem;margin-top:4px}
+.nav-group{display:grid;gap:5px}
+.nav-label{padding:4px 12px 7px;color:#9099ad;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.7rem}
+.nav-item{width:100%;min-height:44px;border:1px solid transparent;border-radius:10px;background:transparent;color:#4b5873;display:flex;align-items:center;gap:11px;padding:10px 12px;text-align:left;font-weight:600;cursor:pointer;text-decoration:none}
+.nav-item:hover{background:#f8f8ff;text-decoration:none}
+.nav-item.active{background:var(--brand-pale);color:var(--brand-dark);border-color:#e0ddff}
+.nav-ico{width:20px;text-align:center;font-size:1rem;flex:none}
+.sidebar-note{margin-top:auto;padding:13px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+.sidebar-note strong{display:block;color:var(--ink);margin-bottom:3px}
+.main-area{min-width:0;max-width:1500px;width:100%;margin:0 auto;padding:30px clamp(18px,3vw,42px) 48px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px}
+.page-head h1{font-size:1.75rem;line-height:1.2;letter-spacing:-.035em;margin:0 0 6px}
+.page-head p{margin:0;color:var(--muted)}
+.eyebrow{color:var(--brand);font-size:.77rem;text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-bottom:7px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h2{margin:0 0 7px;font-size:1.17rem;line-height:1.32;letter-spacing:-.015em}
+.card h3{margin:0 0 7px;font-size:1rem}
+.muted{color:var(--muted);font-size:.91rem;margin:0}
+.btn{font:inherit;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:9px 15px;border-radius:10px;border:1px solid #d8d5ff;background:#fff;color:var(--brand-dark);cursor:pointer;text-decoration:none;white-space:normal}
+.btn:hover{background:#f8f7ff;text-decoration:none}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-dark)}
 .btn.danger{background:var(--red);border-color:var(--red);color:#fff}
-.btn.big{width:100%;min-height:60px;font-size:1.1rem}
+.btn.big{width:100%;min-height:50px;font-size:1rem}
 .btn:disabled{opacity:.55;cursor:wait}
-:focus-visible{outline:4px solid #E8A200;outline-offset:2px}
+.action-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+.action-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;min-height:190px;display:flex;flex-direction:column;align-items:flex-start;box-shadow:var(--shadow)}
+.action-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:var(--brand-pale);color:var(--brand);font-size:1.3rem;margin-bottom:15px}
+.action-card p{color:var(--muted);font-size:.91rem;margin:0 0 18px}
+.action-card .btn{margin-top:auto}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.step{padding:16px;border:1px solid var(--line);border-radius:12px;background:#fbfcff}
+.step-num{display:inline-grid;place-items:center;width:27px;height:27px;background:var(--brand-pale);color:var(--brand-dark);font-weight:800;border-radius:8px;margin-bottom:7px}
+.step p{margin:0;color:var(--muted);font-size:.9rem}
+.notice{display:flex;gap:12px;align-items:flex-start;background:var(--amber-bg);border:1px solid #f1d99b;border-radius:12px;padding:14px 16px;color:#69420b;font-size:.9rem}
+input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border:1px solid #cbd3e2;border-radius:10px;background:#fff;color:var(--ink)}
+label{display:block;margin:16px 0 5px;font-weight:700;font-size:.91rem}
+#files{display:none}
+.upload-drop{display:grid;place-items:center;text-align:center;border:1.5px dashed #b7b5f6;background:#fbfaff;border-radius:14px;padding:28px 18px;margin:15px 0 8px}
+.upload-symbol{font-size:2rem;color:var(--brand);margin-bottom:4px}
+.upload-drop p{margin:5px 0 13px;color:var(--muted);font-size:.9rem}
+.upload-controls{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .thumbs{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
-.th{position:relative;width:110px;height:140px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#EEF1F5}
+.th{position:relative;width:96px;height:118px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#eef1f6}
 .th img{width:100%;height:100%;object-fit:cover}
-.pdf{display:grid;place-items:center;height:100%;text-align:center;font-weight:800;padding:6px}
+.pdf{display:grid;place-items:center;height:100%;text-align:center;font-weight:800;padding:6px;color:var(--red)}
 .pdf small{font-weight:400;word-break:break-all}
-.x{position:absolute;top:4px;right:4px;width:36px;height:36px;border-radius:50%;border:0;background:#16202Bcc;color:#fff;font-size:1.3rem;cursor:pointer}
-.err{color:var(--red);font-weight:600;margin:12px 0 0}
-.load{display:flex;gap:12px;align-items:center;margin-top:14px}
-.spin{width:28px;height:28px;border:4px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:s 1s linear infinite;flex:none}
+.x{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:8px;border:0;background:#17223bcc;color:#fff;font-size:1.1rem;cursor:pointer}
+.err{color:var(--red);font-weight:700;margin:12px 0 0}
+.load{display:flex;gap:12px;align-items:center;margin-top:16px;background:#f8f8ff;border:1px solid #e0ddff;border-radius:12px;padding:13px}
+.spin{width:25px;height:25px;border:3px solid #dedcfb;border-top-color:var(--brand);border-radius:50%;animation:s 1s linear infinite;flex:none}
 @keyframes s{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
-.help{margin-top:14px}
-.helpbox{margin-top:10px;padding:14px;border-radius:12px;background:#FDECEA;border:1px solid #F3B8B3}
-.urgent{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:14px;background:var(--red);color:#fff;margin-bottom:14px}
-.urgent .btn{background:#fff;color:var(--red);border-color:#fff}
+.help{margin-top:12px}
+.helpbox{margin-top:10px;padding:14px;border-radius:12px;background:var(--red-bg);border:1px solid #f2c5bf}
+.urgent{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:13px;background:var(--red-bg);border:1px solid #f2c5bf;color:var(--red);margin-bottom:16px}
+.urgent .btn{background:#fff;color:var(--red);border-color:#edb1a9}
 .ans:focus{outline:none}
-.sec{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:0 0 12px}
-.sec h3{margin:0 0 4px;font-size:1.08rem;color:var(--pri)}
-.sec.dl{border-left:8px solid #E8A200;background:var(--amber-bg)}
+.sec{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 12px;overflow-wrap:anywhere;box-shadow:var(--shadow)}
+.sec h3{margin:0 0 6px;font-size:1.02rem;color:var(--brand-dark)}
+.sec.dl{border-left:4px solid #e8a200;background:var(--amber-bg)}
 .sec.dl h3{color:var(--amber)}
-.sec p,.sec ul{margin:4px 0}.sec ul{padding-left:22px}
-.bar{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
-.bar .btn{flex:1 1 130px}
-.bub{max-width:92%;padding:10px 14px;border-radius:14px;margin:10px 0}
-.bub.me{margin-left:auto;background:var(--pri);color:#fff}
+.sec p,.sec ul{margin:5px 0}.sec ul{padding-left:22px}
+.bar{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}
+.bar .btn{flex:1 1 120px}
+.bub{max-width:92%;padding:11px 14px;border-radius:14px;margin:10px 0}
+.bub.me{margin-left:auto;background:var(--brand);color:#fff}
 .bub.bot{background:#fff;border:1px solid var(--line)}
-.bub .sec{border:0;padding:0;margin:0;background:none}
+.bub .sec{border:0;padding:0;margin:0;background:none;box-shadow:none}
 .row{display:flex;gap:10px}.row input{flex:1}
-.foot{margin:18px 0 8px;font-size:.9rem;color:#4A5766}
-@media print{.top,#up,.noprint{display:none!important}body{background:#fff}}
+.foot{margin:18px 0 8px;font-size:.9rem;color:var(--muted)}
+.results-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 14px}
+.brief-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.resources-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.resource-card{padding:18px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.resource-card p{color:var(--muted);font-size:.9rem}
+#uploadView,#reportsView,#resourcesView{min-width:0}
+@media(max-width:1050px){.app-shell{grid-template-columns:212px minmax(0,1fr)}.action-grid{grid-template-columns:1fr 1fr}.action-card:last-child{grid-column:1/-1}}
+@media(max-width:760px){.top{padding:0 14px}.prototype-pill{display:none}.app-shell{grid-template-columns:1fr}.sidebar{padding:10px 10px 6px;border-right:0;border-bottom:1px solid var(--line);gap:8px}.sidebar-brand,.sidebar-note,.nav-label{display:none}.nav-group{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px}.nav-item{width:auto;white-space:nowrap;min-height:40px;padding:8px 10px;font-size:.86rem}.nav-ico{width:auto}.main-area{padding:20px 13px 36px}.page-head h1{font-size:1.5rem}.card{padding:16px}.action-grid,.steps,.resources-grid{grid-template-columns:1fr}.action-card:last-child{grid-column:auto}.upload-controls{grid-template-columns:1fr}.page-head{margin-bottom:18px}#consent{margin:24px 12px;padding:20px}}
+@media print{.top,.sidebar,#up,.noprint,.page-head{display:none!important}body{background:#fff}.main-area{padding:0}.card,.sec{box-shadow:none;border-color:#ddd}}
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand">⚖ <span data-i="title"></span></div>
-  <select id="lang" aria-label="Language">
-    <option value="en">English</option><option value="hi">हिंदी</option><option value="kn">ಕನ್ನಡ</option>
-  </select>
-</header>
-<main>
-  <p class="tag" data-i="tag"></p>
-
-  <section id="consent" class="card">
-    <p id="consentText"></p>
-    <button class="btn primary big" id="agree" data-i="agree"></button>
-  </section>
-
-  <div id="app" hidden>
-    <section id="up" class="card">
-      <h2 data-i="upload"></h2>
-      <p class="muted" data-i="hint"></p>
-      <input id="files" type="file" accept="image/*,.pdf" multiple hidden>
-      <div style="margin-top:12px"><button class="btn primary big" id="pick" type="button" data-i="pick"></button></div>
-      <div id="thumbs" class="thumbs"></div>
-      <label for="rd" data-i="received"></label>
-      <input id="rd" type="date">
-      <p class="muted" data-i="receivedHint"></p>
-      <label for="dist" data-i="district"></label>
-      <select id="dist"><option value="" data-i="none"></option></select>
-      <p id="err" class="err" role="alert" hidden></p>
-      <div style="margin-top:16px"><button class="btn primary big" id="go" data-i="go"></button></div>
-      <div id="load" class="load" hidden aria-live="polite"><div class="spin"></div><div><b id="lstep"></b><p class="muted" data-i="wait"></p></div></div>
-      <button class="btn big help" id="helpBtn" type="button" data-i="help" aria-expanded="false"></button>
-      <div id="helpBox" class="helpbox" hidden><p id="helpText"></p><a class="btn danger" href="tel:15100" data-i="call"></a></div>
-    </section>
-
-    <section id="out" hidden>
-      <div id="urg" class="urgent" role="alert" hidden><b data-i="urgent"></b><a class="btn" href="tel:15100" data-i="call"></a></div>
-      <article id="ans" tabindex="-1"></article>
-      <section id="briefBox" class="sec noprint" hidden>
-        <h3 data-i="briefTitle"></h3>
-        <p id="briefStatus" data-i="briefStatus" class="muted"></p>
-        <button class="btn" id="downloadBrief" data-i="downloadBrief" type="button"></button>
-        <button class="btn" id="saveToWorkspace" data-i="saveToWorkspace" type="button"></button>
-      </section>
-      <div class="bar noprint">
-        <button class="btn" id="lis" data-i="listen"></button>
-        <button class="btn" id="prt" data-i="print"></button>
-        <button class="btn" id="up1" data-i="up"></button>
-        <button class="btn" id="dn1" data-i="down"></button>
-      </div>
-      <p id="fb" class="muted" hidden data-i="thanks"></p>
-      <div id="chat" aria-live="polite"></div>
-      <div class="noprint">
-        <label for="q" data-i="follow"></label>
-        <div class="row"><input id="q"><button class="btn primary" id="qs" data-i="ask"></button></div>
-      </div>
-      <p class="foot" data-i="footer"></p>
-      <button class="btn big noprint" id="again" data-i="again"></button>
-    </section>
+  <div class="top-brand"><span class="brand-mark" aria-hidden="true">⚖</span><span>Nyaya-Saathi</span></div>
+  <div class="top-right">
+    <span class="prototype-pill">Legal notice assistant · Prototype</span>
+    <label for="lang" style="margin:0;position:absolute;left:-9999px">Language</label>
+    <select id="lang" aria-label="Language">
+      <option value="en">English</option><option value="hi">हिंदी</option><option value="kn">ಕನ್ನಡ</option>
+    </select>
   </div>
-</main>
+</header>
 
+<section id="consent" class="card">
+  <div class="eyebrow">Before you begin</div>
+  <h1 data-i="welcomeConsent">Understand your legal notice, step by step.</h1>
+  <p id="consentText"></p>
+  <button class="btn primary big" id="agree" data-i="agree">I agree and continue</button>
+</section>
+
+<div id="app" hidden>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⚖</span><span>Nyaya-Saathi<small>Legal notice assistant</small></span></div>
+      <nav class="nav-group" aria-label="Primary">
+        <div class="nav-label">Workspace</div>
+        <button type="button" class="nav-item active" data-view="dashboard" id="navDashboard"><span class="nav-ico" aria-hidden="true">▦</span><span data-i="navDashboard">Dashboard</span></button>
+        <button type="button" class="nav-item" data-view="upload" id="navUpload"><span class="nav-ico" aria-hidden="true">↥</span><span data-i="navUpload">Upload Document</span></button>
+        <a class="nav-item" id="navQueue" href="/review?view=queue"><span class="nav-ico" aria-hidden="true">▤</span><span data-i="navQueue">Review Queue</span></a>
+        <a class="nav-item" id="navAllCases" href="/review?view=all"><span class="nav-ico" aria-hidden="true">▣</span><span data-i="navAllCases">All Cases</span></a>
+        <div class="nav-label" data-i="navMore">More</div>
+        <button type="button" class="nav-item" data-view="reports" id="navReports"><span class="nav-ico" aria-hidden="true">▥</span><span data-i="navReports">Reports</span></button>
+        <button type="button" class="nav-item" data-view="resources" id="navResources"><span class="nav-ico" aria-hidden="true">◇</span><span data-i="navResources">Legal Resources</span></button>
+      </nav>
+      <div class="sidebar-note"><strong data-i="privacyTitle">Your documents matter</strong><span data-i="privacyNote">Review how your document is processed before sharing sensitive information.</span></div>
+    </aside>
+
+    <main class="main-area">
+      <div class="page-head">
+        <div><div class="eyebrow" data-i="workspaceLabel">Workspace</div><h1 id="pageTitle" data-i="dashboardTitle">Dashboard</h1><p id="pageSubtitle" data-i="dashboardSubtitle">Choose where you want to start.</p></div>
+      </div>
+
+      <section id="dashboardView">
+        <div class="card">
+          <div class="eyebrow" data-i="overviewLabel">Overview</div>
+          <h2 data-i="dashboardHero">Your legal notice, made easier to understand.</h2>
+          <p class="muted" data-i="dashboardIntro">Start a new document analysis or continue with saved briefs in the lawyer review workspace.</p>
+          <div style="margin-top:16px"><button type="button" class="btn primary" id="startAnalysis"><span aria-hidden="true">＋</span><span data-i="startAnalysis">Analyze a new notice</span></button></div>
+        </div>
+        <div class="action-grid">
+          <article class="action-card"><div class="action-icon" aria-hidden="true">↥</div><h3 data-i="uploadCardTitle">Upload a document</h3><p data-i="uploadCardText">Get a plain-language explanation, important dates and a draft intake brief.</p><button type="button" class="btn" data-view="upload" data-i="uploadNow">Upload now →</button></article>
+          <article class="action-card"><div class="action-icon" aria-hidden="true">▤</div><h3 data-i="queueCardTitle">Review pending cases</h3><p data-i="queueCardText">Open the token-protected lawyer workspace to review saved briefs.</p><a class="btn" href="/review?view=queue" data-i="openQueue">Open review queue →</a></article>
+          <article class="action-card"><div class="action-icon" aria-hidden="true">▣</div><h3 data-i="allCasesCardTitle">Find a saved case</h3><p data-i="allCasesCardText">Search saved cases and filter by review status.</p><a class="btn" href="/review?view=all" data-i="openAllCases">Browse all cases →</a></article>
+        </div>
+        <section class="card">
+          <h2 data-i="howTitle">How it works</h2>
+          <div class="steps" style="margin-top:14px">
+            <div class="step"><span class="step-num">1</span><h3 data-i="stepOneTitle">Upload</h3><p data-i="stepOneText">Choose a clear PDF or page images.</p></div>
+            <div class="step"><span class="step-num">2</span><h3 data-i="stepTwoTitle">Understand</h3><p data-i="stepTwoText">Read the explanation and check facts, dates and quotations.</p></div>
+            <div class="step"><span class="step-num">3</span><h3 data-i="stepThreeTitle">Review</h3><p data-i="stepThreeText">Save a draft only when you are authorised to store it for lawyer review.</p></div>
+          </div>
+        </section>
+        <div class="notice"><span aria-hidden="true">ⓘ</span><div><strong data-i="noticeBoundaryTitle">Important</strong><br><span data-i="noticeBoundary">This tool provides legal information, not legal advice. AI-generated facts and dates need checking against the original document.</span></div></div>
+      </section>
+
+      <section id="uploadView" hidden>
+        <section id="up" class="card">
+          <div class="eyebrow" data-i="uploadStep">New analysis</div>
+          <h2 data-i="upload">Upload your notice</h2>
+          <p class="muted" data-i="hint">Choose a clear PDF or up to three page images.</p>
+          <input id="files" type="file" accept="image/*,.pdf" multiple>
+          <div class="upload-drop"><div class="upload-symbol" aria-hidden="true">⇧</div><strong data-i="dropTitle">Select your notice or document pages</strong><p data-i="dropHint">PDF or images · one PDF or up to three images</p><button class="btn primary" id="pick" type="button" data-i="pick">Choose files</button></div>
+          <div id="thumbs" class="thumbs"></div>
+          <div class="upload-controls">
+            <div><label for="rd" data-i="received">Date you received the notice (optional)</label><input id="rd" type="date"><p class="muted" data-i="receivedHint">Only used as context for preliminary date assessment.</p></div>
+            <div><label for="dist" data-i="district">District (optional)</label><select id="dist"><option value="" data-i="none">Select district</option></select><p class="muted" data-i="districtHint">Local legal-aid contacts may not be available for every district.</p></div>
+          </div>
+          <p id="err" class="err" role="alert" hidden></p>
+          <div style="margin-top:18px"><button class="btn primary big" id="go" data-i="go">Analyze notice</button></div>
+          <div id="load" class="load" hidden aria-live="polite"><div class="spin"></div><div><b id="lstep"></b><p class="muted" data-i="wait">Analysis is in progress.</p></div></div>
+          <button class="btn help" id="helpBtn" type="button" data-i="help" aria-expanded="false">Need urgent support?</button>
+          <div id="helpBox" class="helpbox" hidden><p id="helpText"></p><a class="btn danger" href="tel:15100" data-i="call">Call NALSA 15100</a></div>
+        </section>
+
+        <section id="out" hidden>
+          <div class="results-intro"><div><div class="eyebrow" data-i="analysisComplete">Analysis complete</div><h2 data-i="resultsTitle">Understand your notice</h2><p class="muted" data-i="resultsHint">Read the summary, check important dates and verify the evidence below.</p></div></div>
+          <div id="urg" class="urgent" role="alert" hidden><b data-i="urgent">Urgent: review promptly</b><a class="btn" href="tel:15100" data-i="call">Call NALSA 15100</a></div>
+          <article id="ans" tabindex="-1"></article>
+          <section id="briefBox" class="card noprint" hidden>
+            <h2 data-i="briefTitle">Lawyer intake brief (draft)</h2>
+            <p id="briefStatus" class="muted" data-i="briefStatus"></p>
+            <div class="brief-actions"><button class="btn" id="downloadBrief" data-i="downloadBrief" type="button"></button><button class="btn primary" id="saveToWorkspace" data-i="saveToWorkspace" type="button"></button></div>
+          </section>
+          <div class="bar noprint">
+            <button class="btn" id="lis" data-i="listen"></button>
+            <button class="btn" id="prt" data-i="print"></button>
+            <button class="btn" id="up1" data-i="up"></button>
+            <button class="btn" id="dn1" data-i="down"></button>
+          </div>
+          <p id="fb" class="muted" hidden data-i="thanks"></p>
+          <div id="chat" aria-live="polite"></div>
+          <div class="card noprint">
+            <label for="q" data-i="follow">Ask a question about this notice</label>
+            <div class="row"><input id="q" data-i-placeholder="ph"><button class="btn primary" id="qs" data-i="ask">Ask</button></div>
+          </div>
+          <p class="foot" data-i="footer"></p>
+          <button class="btn big noprint" id="again" data-i="again">Check another notice</button>
+        </section>
+      </section>
+
+      <section id="reportsView" hidden>
+        <section class="card">
+          <div class="eyebrow" data-i="reportsLabel">Evaluation</div>
+          <h2 data-i="reportsTitle">Extraction evaluation</h2>
+          <p class="muted" data-i="reportsIntro">The prototype does not yet provide live operational reports. Developer evaluation is run locally against a reviewed benchmark and saved JSON outputs.</p>
+          <div class="notice" style="margin:16px 0"><span aria-hidden="true">ⓘ</span><div><strong data-i="reportsBoundaryTitle">No invented metrics</strong><br><span data-i="reportsBoundary">No case totals or accuracy rates are shown here because there is no authenticated reporting endpoint yet.</span></div></div>
+          <a class="btn primary" href="https://github.com/Gaurs86/Nyaya-Saathi/blob/feature/notice-evaluation-harness/evals/README.md" target="_blank" rel="noopener noreferrer" data-i="evalGuide">Open evaluation guide ↗</a>
+        </section>
+      </section>
+
+      <section id="resourcesView" hidden>
+        <section class="card">
+          <div class="eyebrow" data-i="resourcesLabel">Support</div>
+          <h2 data-i="resourcesTitle">Legal help resources</h2>
+          <p class="muted" data-i="resourcesIntro">This prototype has not yet integrated a verified, district-by-district legal aid directory. Use the contact below for a starting point and confirm current availability with the service.</p>
+          <div class="resources-grid" style="margin-top:18px">
+            <article class="resource-card"><div class="action-icon" aria-hidden="true">☎</div><h3 data-i="nalsaTitle">NALSA legal aid helpline</h3><p data-i="nalsaText">Call for information on legal aid and help finding the appropriate service.</p><a class="btn primary" href="tel:15100" data-i="callNalsa">Call 15100</a></article>
+            <article class="resource-card"><div class="action-icon" aria-hidden="true">⚖</div><h3 data-i="lawyerTitle">Speak with a qualified lawyer</h3><p data-i="lawyerText">Ask a qualified professional to verify the notice, any applicable deadline, and the response options before acting.</p></article>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
 <script src="/static/index.js" defer></script>
 </body>
 </html>

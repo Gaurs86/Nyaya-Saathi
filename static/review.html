@@ -3,154 +3,212 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nyaya-Saathi — Lawyer Review Workspace</title>
+<meta name="theme-color" content="#f6f7fb">
+<title>Nyaya-Saathi · Lawyer Review Workspace</title>
 <style>
-:root{--ink:#243342;--muted:#607080;--bg:#f2f5f7;--paper:#fff;--line:#d5dde4;--brand:#176b5b;--pale:#e8f3f0;--amber:#8b5e00;--amberbg:#fff4d6;--red:#9b2c2c}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-header{background:#123d36;color:white;padding:22px max(20px,calc((100vw - 1200px)/2));display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-header h1{font-size:1.35rem;margin:0}header p{margin:3px 0 0;color:#d1e6e0;font-size:.92rem}
-a{color:var(--brand)}main{max-width:1200px;margin:24px auto;padding:0 18px 50px}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #2433420a}
-h2{font-size:1.12rem;margin:0 0 12px}h3{font-size:1rem;margin:18px 0 8px}
-label{font-weight:650;font-size:.91rem;display:block;margin-bottom:5px}
-input,textarea,select{font:inherit;color:inherit;background:white;border:1px solid #aab6c2;border-radius:8px;padding:10px;width:100%}
-textarea{min-height:320px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;tab-size:2}
-.form-textarea{min-height:84px;font:inherit}
-.editor-section{padding:12px 0;border-top:1px solid var(--line)}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.section-head h3{margin:4px 0 8px}
-.field-card{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;background:#fbfcfd}
-.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.field-grid .wide{grid-column:1/-1}
-.field-grid label{font-size:.82rem}
-.field-grid input{padding:8px;font-size:.92rem}
-.field-card .actions{margin-top:8px}
-.evidence-item{border-top:1px solid var(--line);padding:9px 0;overflow-wrap:anywhere}
-.evidence-item:first-child{border-top:0}
-button,.button{border:1px solid var(--brand);border-radius:9px;background:var(--brand);color:white;font:inherit;font-weight:650;padding:9px 13px;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;gap:7px}
-button.secondary,.button.secondary{background:white;color:var(--brand)}button.danger{background:var(--red);border-color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
-.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+:root{--ink:#17223b;--muted:#64708b;--bg:#f6f7fb;--paper:#fff;--line:#e3e7f0;--brand:#4f46e5;--brand-dark:#3730a3;--brand-pale:#eeedff;--teal:#0f766e;--teal-pale:#e6f7f3;--amber:#8a5300;--amberbg:#fff6df;--red:#b42318;--red-bg:#fff0ee;--shadow:0 5px 24px rgba(30,41,59,.045)}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit} :focus-visible{outline:3px solid #c4b5fd;outline-offset:2px}
+a{color:var(--brand);text-decoration:none}a:hover{text-decoration:underline}
+.top{height:68px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 28px;position:sticky;top:0;z-index:20}
+.top-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:1.08rem;letter-spacing:-.02em}
+.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--brand-pale);color:var(--brand);font-size:1.3rem}
+.top-right{display:flex;align-items:center;gap:12px}.prototype-pill{border:1px solid var(--line);background:#f8fafc;color:var(--muted);border-radius:999px;padding:5px 10px;font-size:.82rem}
+.app-shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:calc(100vh - 68px)}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:22px 14px 18px;display:flex;flex-direction:column;gap:24px}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 10px 4px;font-weight:800;line-height:1.15}
+.sidebar-brand small{display:block;font-weight:500;color:var(--muted);font-size:.78rem;margin-top:4px}
+.nav-group{display:grid;gap:5px}.nav-label{padding:4px 12px 7px;color:#9099ad;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.7rem}
+.nav-item{width:100%;min-height:44px;border:1px solid transparent;border-radius:10px;background:transparent;color:#4b5873;display:flex;align-items:center;gap:11px;padding:10px 12px;text-align:left;font-weight:600;cursor:pointer;text-decoration:none}
+.nav-item:hover{background:#f8f8ff;text-decoration:none}.nav-item.active{background:var(--brand-pale);color:var(--brand-dark);border-color:#e0ddff}
+.nav-ico{width:20px;text-align:center;font-size:1rem;flex:none}
+.sidebar-note{margin-top:auto;padding:13px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+.sidebar-note strong{display:block;color:var(--ink);margin-bottom:3px}
+.main-area{min-width:0;max-width:1600px;width:100%;margin:0 auto;padding:28px clamp(16px,2.3vw,34px) 46px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+.page-head h1{font-size:1.7rem;line-height:1.2;letter-spacing:-.035em;margin:0 0 5px}.page-head p{margin:0;color:var(--muted)}
+.eyebrow{color:var(--brand);font-size:.75rem;text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-bottom:6px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:15px;padding:19px;margin-bottom:16px;box-shadow:var(--shadow)}
+h2{font-size:1.08rem;margin:0 0 10px;letter-spacing:-.015em}h3{font-size:.98rem;margin:18px 0 8px;letter-spacing:-.01em}
+label{font-weight:650;font-size:.88rem;display:block;margin-bottom:5px}
+input,textarea,select{font:inherit;color:var(--ink);background:#fff;border:1px solid #cbd3e2;border-radius:9px;padding:10px 11px;width:100%;min-height:42px}
+textarea{min-height:160px;tab-size:2}.form-textarea{min-height:78px;font:inherit}
+.editor-section{padding:12px 0;border-top:1px solid var(--line)}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-head h3{margin:4px 0 8px}
+.field-card{border:1px solid var(--line);border-radius:11px;padding:12px;margin:8px 0;background:#fbfcff}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field-grid .wide{grid-column:1/-1}.field-grid label{font-size:.8rem}.field-grid input{padding:8px 9px;font-size:.9rem}
+.field-card .actions{margin-top:8px}.evidence-item{border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:9px 0;overflow-wrap:anywhere;background:#fbfcff}.evidence-item:first-child{border-top:1px solid var(--line)}
+button,.button{border:1px solid var(--brand);border-radius:9px;background:var(--brand);color:white;font:inherit;font-weight:700;padding:9px 13px;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;gap:7px;white-space:normal}
+button:hover,.button:hover{background:var(--brand-dark);text-decoration:none}
+button.secondary,.button.secondary{background:white;color:var(--brand-dark);border-color:#d8d5ff}button.secondary:hover{background:#f8f7ff}
+button.danger{background:var(--red);border-color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:minmax(245px,310px) minmax(0,1fr);gap:16px;align-items:start}
 .fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.muted{color:var(--muted);font-size:.9rem}.notice{background:var(--amberbg);border:1px solid #e4c56d;border-radius:10px;padding:12px;margin:10px 0;font-size:.9rem}
-.error{background:#fce8e6;border:1px solid #e8b1ac;color:#8a2222;padding:10px;border-radius:8px;margin:10px 0;white-space:pre-wrap}
-.success{background:var(--pale);border:1px solid #a4d6c7;color:#125649;padding:10px;border-radius:8px;margin:10px 0}
-.case-list{display:grid;gap:8px}.case-item{display:block;text-align:left;background:white;color:var(--ink);border:1px solid var(--line);width:100%;padding:12px;border-radius:10px}.case-item.active{border:2px solid var(--brand);background:var(--pale)}
-.case-item strong{display:block;overflow-wrap:anywhere}.status{display:inline-block;padding:2px 8px;border-radius:20px;background:#e8edf1;color:#384b5b;font-size:.75rem;margin-top:5px}.status.approved{background:#d6f3e7;color:#126344}.status.rejected{background:#ffe1df;color:#8a2525}.status.changes_requested{background:#fff0cc;color:#795100}
-.checks{display:grid;gap:8px}.check{display:flex;align-items:flex-start;gap:8px;font-weight:500}.check input{width:auto;margin-top:5px}.audit{padding:10px 0;border-top:1px solid var(--line)}.audit:first-child{border-top:0}
-.smallcaps{text-transform:uppercase;letter-spacing:.05em;font-size:.76rem;color:var(--muted);font-weight:700}.empty{padding:25px 12px;text-align:center;color:var(--muted)}.toplinks{display:flex;gap:12px;flex-wrap:wrap}#workspace[hidden],#details[hidden]{display:none}
-@media(max-width:850px){.grid{grid-template-columns:1fr}.fieldrow{grid-template-columns:1fr}header{padding:18px}}@media print{header,#auth,#queue,.noprint{display:none!important}body{background:white}main{max-width:none;margin:0;padding:0}.panel{box-shadow:none;border:0;padding:0}}
+.muted{color:var(--muted);font-size:.88rem}.notice{background:var(--amberbg);border:1px solid #f1d99b;border-radius:11px;padding:12px;margin:10px 0;font-size:.88rem;color:#69420b}
+.error{background:var(--red-bg);border:1px solid #f2c5bf;color:#8a2222;padding:10px;border-radius:9px;margin:10px 0;white-space:pre-wrap}
+.success{background:var(--teal-pale);border:1px solid #a4d6c7;color:#125649;padding:10px;border-radius:9px;margin:10px 0}
+.case-list{display:grid;gap:8px}.case-item{display:block;text-align:left;background:white!important;color:var(--ink)!important;border:1px solid var(--line)!important;width:100%;padding:12px;border-radius:11px;box-shadow:none}
+.case-item:hover{border-color:#c1bdfb!important}.case-item.active{border:1.5px solid var(--brand)!important;background:#f8f7ff!important}
+.case-item strong{display:block;overflow-wrap:anywhere}.status{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:#edf0f5;color:#49566f;font-size:.74rem;font-weight:700;margin-top:5px}
+.status.approved{background:#d9f5e9;color:#126344}.status.rejected{background:#ffe1df;color:#8a2525}.status.changes_requested{background:#fff0cc;color:#795100}.status.pending_review{background:#fff2ce;color:#87550b}
+.checks{display:grid;gap:9px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fbfcff}
+.check{display:flex;align-items:flex-start;gap:8px;font-weight:500;font-size:.89rem}.check input{width:auto;min-height:auto;margin-top:5px;flex:none}
+.audit{padding:12px 0;border-top:1px solid var(--line)}.audit:first-child{border-top:0}
+.audit pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8fafc;padding:9px;border-radius:8px;color:#526079;font-size:.78rem}
+.smallcaps{text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;color:var(--muted);font-weight:800}.empty{padding:25px 12px;text-align:center;color:var(--muted)}
+#workspace[hidden],#details[hidden]{display:none}
+.queue-meta{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.status-filter{margin:12px 0}
+.review-boundary{border-left:4px solid #e8a200}
+.details-toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.case-heading{min-width:0;flex:1}.case-heading h2{font-size:1.25rem;overflow-wrap:anywhere}
+.action-section{padding:13px 0;border-top:1px solid var(--line)}
+.danger-zone{border-top:1px solid #f1d0cd;padding-top:14px}
+@media(max-width:1100px){.app-shell{grid-template-columns:212px minmax(0,1fr)}.grid{grid-template-columns:1fr}.case-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.top{padding:0 14px}.prototype-pill{display:none}.app-shell{grid-template-columns:1fr}.sidebar{padding:10px;border-right:0;border-bottom:1px solid var(--line);gap:7px}.sidebar-brand,.sidebar-note,.nav-label{display:none}.nav-group{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px}.nav-item{width:auto;white-space:nowrap;min-height:40px;padding:8px 10px;font-size:.84rem}.nav-ico{width:auto}.main-area{padding:20px 12px 34px}.page-head h1{font-size:1.45rem}.panel{padding:15px}.fieldrow,.field-grid{grid-template-columns:1fr}.field-grid .wide{grid-column:auto}.case-list{grid-template-columns:1fr}.top-right{gap:6px}}
+@media print{.top,.sidebar,#auth,#queue,.noprint,.page-head{display:none!important}body{background:white}.main-area{max-width:none;margin:0;padding:0}.panel{box-shadow:none;border:0;padding:0}}
 </style>
 </head>
 <body>
-<header>
-  <div><h1>Nyaya-Saathi · Lawyer Review Workspace</h1><p>Correct the intake brief, record a review decision, and export an approved version.</p></div>
-  <nav class="toplinks"><a href="/" style="color:white">Notice explainer</a><a href="https://github.com/Gaurs86/Nyaya-Saathi" style="color:white">GitHub</a></nav>
+<header class="top">
+  <div class="top-brand"><span class="brand-mark" aria-hidden="true">⚖</span><span>Nyaya-Saathi</span></div>
+  <div class="top-right"><span class="prototype-pill">Lawyer review · Prototype</span><button type="button" class="secondary" id="disconnect" hidden>Disconnect</button></div>
 </header>
-<main>
-  <section class="panel" id="auth">
-    <h2>Connect to review workspace</h2>
-    <p class="muted">The reviewer token is held in this page's memory only and is not saved in browser storage. The reviewer label is self-reported, not a verified identity.</p>
-    <div class="fieldrow">
-      <div><label for="token">Workspace token</label><input id="token" type="password" autocomplete="off" placeholder="REVIEWER_API_TOKEN"></div>
-      <div><label for="reviewer">Reviewer label</label><input id="reviewer" maxlength="80" placeholder="e.g. Advocate / reviewer initials"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⚖</span><span>Nyaya-Saathi<small>Legal notice assistant</small></span></div>
+    <nav class="nav-group" aria-label="Primary">
+      <div class="nav-label">Workspace</div>
+      <a class="nav-item" href="/?view=dashboard"><span class="nav-ico" aria-hidden="true">▦</span><span>Dashboard</span></a>
+      <a class="nav-item" href="/?view=upload"><span class="nav-ico" aria-hidden="true">↥</span><span>Upload Document</span></a>
+      <button class="nav-item active" type="button" id="navReviewQueue" data-review-view="queue" aria-current="page"><span class="nav-ico" aria-hidden="true">▤</span><span>Review Queue</span></button>
+      <button class="nav-item" type="button" id="navAllCases" data-review-view="all"><span class="nav-ico" aria-hidden="true">▣</span><span>All Cases</span></button>
+      <div class="nav-label">More</div>
+      <a class="nav-item" href="/?view=reports"><span class="nav-ico" aria-hidden="true">▥</span><span>Reports</span></a>
+      <a class="nav-item" href="/?view=resources"><span class="nav-ico" aria-hidden="true">◇</span><span>Legal Resources</span></a>
+    </nav>
+    <div class="sidebar-note"><strong>Review carefully</strong>AI-extracted facts and dates must be checked against the original notice.</div>
+  </aside>
+
+  <main class="main-area">
+    <div class="page-head">
+      <div><div class="eyebrow">Workspace</div><h1>Lawyer review</h1><p>Check facts, correct the draft and record a review decision.</p></div>
+      <a href="/?view=upload" class="button secondary">＋ New analysis</a>
     </div>
-    <div class="actions"><button id="connect">Connect and load queue</button></div>
-    <div id="authMessage" aria-live="polite"></div>
-  </section>
 
-  <section id="workspace" hidden>
-    <div class="grid">
-      <aside class="panel" id="queue">
-        <h2>Review queue</h2>
-        <label for="statusFilter">Filter status</label>
-        <select id="statusFilter">
-          <option value="">All statuses</option>
-          <option value="pending_review">Pending review</option>
-          <option value="changes_requested">Changes requested</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <div class="actions"><button class="secondary" id="refresh">Refresh</button></div>
-        <p class="muted" id="queueCount"></p>
-        <div class="case-list" id="caseList"><div class="empty">No cases loaded.</div></div>
-        <div class="notice">Only extracted brief data is stored by this workspace; the original notice is not stored here. Keep the original source available for review.</div>
-      </aside>
-      <section>
-        <div class="panel" id="details" hidden>
-          <div class="smallcaps">Selected matter</div>
-          <h2 id="caseTitle"></h2>
-          <p class="muted" id="caseMeta"></p>
-          <p id="caseStatus"></p>
-          <div class="notice"><strong>Review boundary:</strong> Approval means the reviewer has checked the draft for their workflow. It is not a guarantee of legal validity and does not replace professional judgment.</div>
+    <section class="panel" id="auth">
+      <div class="eyebrow">Private workspace</div>
+      <h2>Connect to the review queue</h2>
+      <p class="muted">Your token stays in this page's memory and is not saved in browser storage. Reviewer labels are self-reported, not verified identities.</p>
+      <div class="fieldrow" style="margin-top:14px">
+        <div><label for="token">Workspace token</label><input id="token" type="password" autocomplete="off" placeholder="Enter server token"></div>
+        <div><label for="reviewer">Reviewer label</label><input id="reviewer" maxlength="80" placeholder="e.g. initials or team role"></div>
+      </div>
+      <div class="actions"><button id="connect">Connect and load cases</button></div>
+      <div id="authMessage" aria-live="polite"></div>
+    </section>
 
-          <h3>Editable brief fields</h3>
-          <p class="muted">Correct the extracted facts using the source document. Quote evidence remains visible for comparison. Saving corrections increments the revision and resets an existing approval.</p>
-          <label for="summaryEdit">Plain-language summary</label>
-          <textarea id="summaryEdit" class="form-textarea" aria-label="Summary"></textarea>
+    <section id="workspace" hidden>
+      <div class="grid">
+        <aside class="panel" id="queue">
+          <div class="queue-meta"><h2 style="margin:0">Cases</h2><button class="secondary" id="refresh" type="button">Refresh</button></div>
+          <label for="statusFilter" class="status-filter">Filter by status</label>
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option value="pending_review">Pending review</option>
+            <option value="changes_requested">Changes requested</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <p class="muted" id="queueCount" style="margin:11px 0"></p>
+          <div class="case-list" id="caseList"><div class="empty">Connect to load cases.</div></div>
+          <div class="notice" style="margin-top:16px"><strong>Source document:</strong> the workspace stores extracted brief data, not the original notice. Keep the source available for review.</div>
+        </aside>
 
-          <div class="editor-section">
-            <div class="section-head"><h3>Parties</h3><button id="addParty" type="button" class="secondary">Add party</button></div>
-            <div id="partiesEditor"></div>
-          </div>
-          <div class="editor-section">
-            <label for="demandsEdit">Demands or claims (one per line)</label>
-            <textarea id="demandsEdit" class="form-textarea" aria-label="Demands or claims"></textarea>
-          </div>
-          <div class="editor-section">
-            <div class="section-head"><h3>Dates and periods</h3><button id="addDate" type="button" class="secondary">Add date / period</button></div>
-            <div id="datesEditor"></div>
-            <p class="muted">Calculated dates are preliminary. Editing this section invalidates previous calculations and requires a fresh independent review.</p>
-          </div>
-          <div class="editor-section">
-            <div class="section-head"><h3>Legal provisions cited</h3><button id="addProvision" type="button" class="secondary">Add provision</button></div>
-            <div id="provisionsEditor"></div>
-          </div>
-          <div class="editor-section">
-            <label for="informationEdit">Information to confirm (one item per line)</label>
-            <textarea id="informationEdit" class="form-textarea" aria-label="Information to confirm"></textarea>
-          </div>
-          <div class="editor-section">
-            <h3>Extracted evidence (read-only)</h3>
-            <div id="evidenceList"></div>
-          </div>
-          <label for="correctionNote">Correction note (optional)</label>
-          <input id="correctionNote" maxlength="2000" placeholder="Why were these fields changed?">
-          <div class="actions"><button id="saveChanges">Save corrections</button><button class="secondary" id="reloadCase">Discard local edits / reload</button></div>
+        <section>
+          <div class="panel empty" id="noCase">Select a case from the list to review its extracted facts, evidence and dates.</div>
+          <div id="message" aria-live="polite"></div>
 
-          <h3>Review decision</h3>
-          <div class="checks">
-            <label class="check"><input type="checkbox" id="sourceChecked"> I checked the original source document and relevant passages.</label>
-            <label class="check"><input type="checkbox" id="factsChecked"> I checked extracted parties, demands, amounts and dates against the source.</label>
-            <label class="check"><input type="checkbox" id="deadlineChecked"> I reviewed date triggers and deadline language, or confirmed that no legal deadline is being asserted.</label>
-          </div>
-          <label for="decisionNote" style="margin-top:12px">Review note / changes requested</label>
-          <textarea id="decisionNote" style="min-height:90px;font:inherit" maxlength="2000" placeholder="Record corrections needed or the review context."></textarea>
-          <div class="actions">
-            <button id="approve">Approve brief</button>
-            <button class="secondary" id="requestChanges">Request changes</button>
-            <button class="danger" id="reject">Reject intake</button>
-          </div>
+          <div class="panel" id="details" hidden>
+            <div class="details-toolbar">
+              <div class="case-heading"><div class="smallcaps">Selected matter</div><h2 id="caseTitle"></h2><p class="muted" id="caseMeta"></p><p id="caseStatus"></p></div>
+              <div class="actions noprint" style="margin-top:0"><button class="secondary" id="exportPdf" disabled>Download PDF</button><button class="secondary" id="exportDocx" disabled>Download DOCX</button></div>
+            </div>
+            <div class="notice review-boundary"><strong>Review boundary:</strong> approval confirms the brief was checked for your workflow. It does not guarantee legal validity or replace professional judgment.</div>
 
-          <h3>Export</h3>
-          <p class="muted">PDF and DOCX downloads are enabled only after approval. Exported files include the current case ID and review status.</p>
-          <div class="actions">
-            <button class="secondary" id="exportPdf" disabled>Download reviewed PDF</button>
-            <button class="secondary" id="exportDocx" disabled>Download reviewed DOCX</button>
-          </div>
+            <div class="action-section">
+              <h3 style="margin-top:0">Brief summary</h3>
+              <label for="summaryEdit">Plain-language summary</label>
+              <textarea id="summaryEdit" class="form-textarea" aria-label="Summary"></textarea>
+            </div>
 
-          <h3>Audit history</h3>
-          <div id="audit"><p class="muted">Loading audit events…</p></div>
-          <h3>Danger zone</h3>
-          <p class="muted">Deleting a case permanently removes its brief and associated audit history from this prototype database.</p>
-          <button class="danger" id="deleteCase">Permanently delete case</button>
-        </div>
-        <div class="panel empty" id="noCase">Connect and select a case from the queue. If you've just saved a brief, use the case ID included in the URL.</div>
-        <div id="message" aria-live="polite"></div>
-      </section>
-    </div>
-  </section>
-  <p class="muted">Prototype warning: this workspace uses one shared server token and a local SQLite database. It is not a multi-tenant or production-grade identity/audit system. Do not deploy it for real client documents until individual authentication, access control, retention, and encrypted storage are in place.</p>
-</main>
+            <div class="action-section">
+              <div class="section-head"><h3>Parties</h3><button id="addParty" type="button" class="secondary">＋ Add party</button></div>
+              <div id="partiesEditor"></div>
+            </div>
+
+            <div class="action-section">
+              <label for="demandsEdit">Demands or claims <span class="muted">(one per line)</span></label>
+              <textarea id="demandsEdit" class="form-textarea" aria-label="Demands or claims"></textarea>
+            </div>
+
+            <div class="action-section">
+              <div class="section-head"><h3>Dates and periods</h3><button id="addDate" type="button" class="secondary">＋ Add date / period</button></div>
+              <div id="datesEditor"></div>
+              <p class="muted">A stated date or period is not proof of a legally valid deadline. Editing these fields invalidates prior preliminary calculations.</p>
+            </div>
+
+            <div class="action-section">
+              <div class="section-head"><h3>Legal provisions cited</h3><button id="addProvision" type="button" class="secondary">＋ Add provision</button></div>
+              <div id="provisionsEditor"></div>
+            </div>
+
+            <div class="action-section">
+              <label for="informationEdit">Information to confirm <span class="muted">(one item per line)</span></label>
+              <textarea id="informationEdit" class="form-textarea" aria-label="Information to confirm"></textarea>
+            </div>
+
+            <div class="action-section">
+              <h3>Evidence from the notice</h3>
+              <p class="muted">Evidence passages are read-only references. Compare each quotation with the original source.</p>
+              <div id="evidenceList"></div>
+            </div>
+
+            <div class="action-section noprint">
+              <label for="correctionNote">Correction note <span class="muted">(optional)</span></label>
+              <input id="correctionNote" maxlength="2000" placeholder="Why were these fields changed?">
+              <div class="actions"><button id="saveChanges">Save corrections</button><button class="secondary" id="reloadCase">Discard edits</button></div>
+            </div>
+
+            <div class="action-section noprint">
+              <h3>Review decision</h3>
+              <div class="checks">
+                <label class="check"><input type="checkbox" id="sourceChecked"> I checked the original source document and relevant passages.</label>
+                <label class="check"><input type="checkbox" id="factsChecked"> I checked parties, demands, amounts and dates against the source.</label>
+                <label class="check"><input type="checkbox" id="deadlineChecked"> I reviewed date triggers and deadline wording, or confirmed no legal deadline is being asserted.</label>
+              </div>
+              <label for="decisionNote" style="margin-top:12px">Review note / changes requested</label>
+              <textarea id="decisionNote" style="min-height:82px;font:inherit" maxlength="2000" placeholder="Describe requested changes or review context."></textarea>
+              <div class="actions"><button id="approve">Approve brief</button><button class="secondary" id="requestChanges">Request changes</button><button class="danger" id="reject">Reject intake</button></div>
+            </div>
+
+            <div class="action-section">
+              <h3>Review history</h3>
+              <div id="audit"><p class="muted">Loading audit events…</p></div>
+            </div>
+            <div class="danger-zone noprint">
+              <h3>Delete case</h3>
+              <p class="muted">Permanently removes the case and its audit history from this prototype database.</p>
+              <button class="danger" id="deleteCase">Permanently delete case</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+    <div class="sidebar-note" style="max-width:960px;margin-top:18px"><strong>Prototype privacy warning</strong>This workspace uses a shared server token and local SQLite. It is not production-grade identity, encryption or audit storage. Do not use with live client documents until access control, retention and secure storage are implemented.</div>
+  </main>
+</div>
 <script src="/static/review.js" defer></script>
 </body>
 </html>

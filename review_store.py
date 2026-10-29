@@ -168,6 +168,16 @@ def list_cases(status: str | None = None, limit: int = 100) -> list[dict]:
         return [_case_from_row(row, include_brief=False) for row in rows]
 
 
+def status_counts() -> dict[str, int]:
+    with _db() as conn:
+        counts = {status: 0 for status in CASE_STATUSES}
+        rows = conn.execute(
+            "SELECT status, COUNT(*) AS count FROM review_cases GROUP BY status"
+        ).fetchall()
+        counts.update({row["status"]: row["count"] for row in rows})
+        return {"total": sum(counts.values()), **counts}
+
+
 def get_case(case_id: str) -> dict | None:
     with _db() as conn:
         row = conn.execute("SELECT * FROM review_cases WHERE case_id=?", (case_id,)).fetchone()
