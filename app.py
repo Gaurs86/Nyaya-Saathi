@@ -199,7 +199,7 @@ async def analyze(
     # Run extraction. Do not return provider exceptions or document content to
     # the browser; operational logs record only the exception class.
     try:
-        extraction = extract_notice(images, mime_types)
+        extraction = await asyncio.to_thread(extract_notice, images, mime_types)
     except Exception as exc:
         logger.warning("Notice extraction failed (%s)", type(exc).__name__)
         log_event('unreadable', 'unknown', language)
