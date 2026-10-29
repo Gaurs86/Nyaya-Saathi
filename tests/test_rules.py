@@ -13,21 +13,15 @@ def by_label(res, text):
 
 
 # ---- deadlines: original tests -------------------------------------------------
-def test_cheque_bounce_with_receipt():
+def test_unverified_cheque_bounce_rule_is_not_applied():
+    # No period was extracted from the notice and the statutory fallback is unverified.
     res = compute_deadlines('cheque_bounce_138', [], '2026-10-01', '2026-10-05')
-    pay = by_label(res, 'pay within')
-    assert len(pay) == 1
-    assert pay[0]['due_date'] == '2026-10-16'
-    assert pay[0]['days_left'] == 11
-    assert pay[0]['urgent'] is False
+    assert not by_label(res, 'pay within')
 
 
-def test_cheque_bounce_missing_receipt():
+def test_unverified_rule_does_not_create_deadline_without_receipt():
     res = compute_deadlines('cheque_bounce_138', [], None, '2026-10-05')
-    pay = by_label(res, 'pay within')
-    assert len(pay) == 1
-    assert pay[0]['due_date'] is None
-    assert pay[0]['basis'] == 'ask user when they received the notice'
+    assert not by_label(res, 'pay within')
 
 
 def test_urgent_hearing():
@@ -39,18 +33,23 @@ def test_urgent_hearing():
 
 
 # ---- deadlines: eviction notice (your sample) and the bugs fixed --------------
-def test_stated_period_counted_from_receipt():
+def test_stated_period_uses_user_receipt_date_but_remains_provisional():
     res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], '2026-10-15', '2026-10-29')
     pay = by_label(res, 'pay within')[0]
     assert pay['due_date'] == '2026-10-30' and pay['days_left'] == 1
-    assert pay['urgent'] is True and pay['assumed'] is False
+    assert pay['urgent'] is None and pay['overdue'] is None
+    assert pay['assumed'] is False
+    assert pay['calculation_status'] == 'provisional_from_user_receipt_date'
+    assert pay['legal_rule_verified'] is None
 
 
-def test_missing_receipt_assumes_notice_date():
+def test_missing_receipt_never_assumes_notice_date():
     res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], None, '2026-10-29')
     pay = by_label(res, 'pay within')[0]
-    assert pay['due_date'] == '2026-10-30' and pay['assumed'] is True and pay['urgent'] is True
-    assert 'real receipt date' in pay['basis']
+    assert pay['due_date'] is None
+    assert pay['assumed'] is False
+    assert pay['calculation_status'] == 'missing_receipt_date'
+    assert 'no date calculated' in pay['basis']
 
 
 def test_notice_date_is_informational_not_a_deadline():
@@ -59,22 +58,16 @@ def test_notice_date_is_informational_not_a_deadline():
     assert n['informational'] is True and n['urgent'] is False and n['overdue'] is False
 
 
-def test_fallback_not_used_when_notice_states_a_period():
-    res = compute_deadlines('eviction_or_rent', [NOTICE, PERIOD], '2026-10-15', '2026-10-29')
-    assert not by_label(res, 'fallback')
-
-
-def test_fallback_used_when_notice_states_no_period():
+def test_unverified_eviction_fallback_is_never_applied():
     res = compute_deadlines('eviction_or_rent', [NOTICE], '2026-10-20', '2026-10-29')
-    fb = by_label(res, 'fallback')[0]
-    assert fb['due_date'] == '2026-11-04'
+    assert not by_label(res, 'fallback')
 
 
 def test_court_summons_written_statement_counts_from_receipt():
     hearing = {'label': 'hearing date', 'date': '2026-12-01', 'original_text': '1 Dec 2026'}
     res = compute_deadlines('court_summons', [hearing], None, '2026-10-29')
     assert not by_label(res, 'appear on hearing date')      # no made-up deadline equal to the notice date
-    assert by_label(res, 'written statement')[0]['due_date'] is None
+    assert not by_label(res, 'written statement')              # rule is unverified and must not be applied
 
 
 def test_past_date_is_overdue_not_urgent():
@@ -120,4 +113,11 @@ def test_not_enough_information():
 def test_unknown_district():
     r = find_center('UnknownDistrict')
     assert r['found'] is False
-    assert 'nalasa_helpline' in r
+    assert 'nalsa_helpline' in r
+
+
+def test_placeholder_dlsa_contact_is_not_returned_as_verified():
+    r = find_center('Bengaluru Urban')
+    assert r['found'] is False
+    assert r['entries'] == []
+    assert r['nalsa_helpline']['phone'] == '15100'

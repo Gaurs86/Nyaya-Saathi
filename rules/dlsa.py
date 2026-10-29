@@ -11,7 +11,8 @@ CSV_PATH = Path(__file__).parent.parent / 'data' / 'dlsa_karnataka.csv'
 
 def find_center(district: str) -> Dict[str, Any]:
     district_lower = district.strip().lower()
-    result = {'nalasa_helpline': {'name': 'NALSA Helpline', 'phone': '15100', 'note': 'National helpline'}}
+    helpline = {'name': 'NALSA Helpline', 'phone': '15100', 'note': 'National helpline'}
+    result = {'nalsa_helpline': helpline}
 
     if not CSV_PATH.exists():
         result['found'] = False
@@ -23,11 +24,19 @@ def find_center(district: str) -> Dict[str, Any]:
         reader = csv.DictReader(fh)
         for row in reader:
             if row.get('district', '').strip().lower() == district_lower:
+                name = (row.get('name') or '').strip()
+                address = (row.get('address') or '').strip()
+                phone = (row.get('phone') or '').strip()
+                # Never return placeholder rows as though they were verified contacts.
+                placeholders = {'', 'TO FILL', 'TBD', 'N/A', 'NA', 'UNKNOWN'}
+                if any(value.upper() in placeholders for value in (name, address, phone)):
+                    continue
+                email = (row.get('email') or '').strip()
                 entries.append({
-                    'name': row.get('name'),
-                    'address': row.get('address'),
-                    'phone': row.get('phone'),
-                    'email': row.get('email')
+                    'name': name,
+                    'address': address,
+                    'phone': phone,
+                    'email': None if email.upper() in placeholders else email
                 })
 
     result['found'] = len(entries) > 0

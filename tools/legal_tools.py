@@ -57,23 +57,40 @@ def check_legal_aid_tool(answers_json: str) -> str:
 def find_legal_aid_center_tool(district: str) -> str:
     """Find DLSA centers for a district.
 
-    Returns a JSON string with keys: found (bool), entries (list), nalasa_helpline.
+    Returns a JSON string with keys: found (bool), entries (list), nalsa_helpline.
     """
     result = dlsa_mod.find_center(district or "")
     return json.dumps(result, ensure_ascii=False)
 
 
-def get_legal_context_tool(doc_type: str) -> str:
-    """Return the knowledge notes for a document type.
+SUPPORTED_DOC_TYPES = {
+    "court_summons",
+    "eviction_or_rent",
+    "cheque_bounce_138",
+    "labour_or_wage",
+    "scheme_rejection",
+    "family_or_maintenance",
+    "other",
+}
 
-    Reads knowledge/<doc_type>.md and returns the file contents, or
-    returns 'No notes available' if the file is missing.
+
+def get_legal_context_tool(doc_type: str) -> str:
+    """Return reviewed notes for a supported document type.
+
+    Treat doc_type as untrusted model output: accept only an explicit allowlist
+    before constructing a path, so arbitrary paths cannot be requested.
     """
-    base = Path(__file__).parent.parent / 'knowledge'
-    path = base / f"{doc_type}.md"
-    if not path.exists():
-        return "No notes available"
+    if doc_type not in SUPPORTED_DOC_TYPES:
+        return "No reviewed notes available for this document type."
+
+    base = Path(__file__).parent.parent / "knowledge"
+    path = (base / f"{doc_type}.md").resolve()
+    if path.parent != base.resolve() or not path.is_file():
+        return "No reviewed notes available for this document type."
     try:
-        return path.read_text(encoding='utf-8')
+        content = path.read_text(encoding="utf-8")
+        if not content.strip() or "TO BE WRITTEN" in content.upper():
+            return "No reviewed notes available for this document type."
+        return content
     except Exception:
-        return "No notes available"
+        return "No reviewed notes available for this document type."

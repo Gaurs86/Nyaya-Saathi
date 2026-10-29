@@ -15,6 +15,8 @@ import io
 import json
 import uuid
 import asyncio
+import logging
+import time
 from datetime import datetime
 from typing import List, Optional
 
@@ -27,9 +29,11 @@ from google.adk.runners import InMemoryRunner
 from google.genai.types import Content, Part
 
 from zoneinfo import ZoneInfo
+from pypdf import PdfReader
 from pipeline import extract_notice
+from briefs import build_lawyer_brief
+from uploads import MAX_FILE_BYTES, validate_upload_payloads
 from rules import deadlines as deadlines_mod, dlsa as dlsa_mod
-from recorder import record
 import agent as agent_module
 from tools import legal_tools
 from metrics import log_event, aggregate_events
@@ -39,13 +43,70 @@ PORT = int(os.getenv('PORT', '8000'))
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
 
 app = FastAPI(title='Nyaya Saathi Web')
+logger = logging.getLogger(__name__)
 # One shared runner: InMemoryRunner keeps sessions in memory, so /chat must reuse the same one as /analyze
 RUNNER = InMemoryRunner(agent=agent_module.root_agent, app_name=agent_module.APP_NAME)
-app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
+# Same-origin use needs no CORS. Set CORS_ORIGINS to a comma-separated allowlist
+# only if a separately hosted frontend needs access to this API.
+CORS_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+if CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 
 # Simple feedback store
 FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), '.feedback.jsonl')
+
+# Browser sessions are isolated by a random ADK user ID. They are ephemeral,
+# process-local sessions, not authenticated accounts or a durable case database.
+SESSION_TTL_SECONDS = 45 * 60
+MAX_TRACKED_SESSIONS = 5000
+SESSION_OWNERS: dict[str, tuple[str, float]] = {}
+
+
+def _prune_sessions() -> None:
+    now = time.monotonic()
+    expired = [
+        sid for sid, (_, created) in SESSION_OWNERS.items()
+        if now - created > SESSION_TTL_SECONDS
+    ]
+    for sid in expired:
+        SESSION_OWNERS.pop(sid, None)
+    while len(SESSION_OWNERS) > MAX_TRACKED_SESSIONS:
+        oldest = min(SESSION_OWNERS, key=lambda sid: SESSION_OWNERS[sid][1])
+        SESSION_OWNERS.pop(oldest, None)
+
+
+def _register_session(session_id: str, user_id: str) -> None:
+    _prune_sessions()
+    SESSION_OWNERS[session_id] = (user_id, time.monotonic())
+    _prune_sessions()
+
+
+def _session_owner(session_id: str) -> Optional[str]:
+    _prune_sessions()
+    entry = SESSION_OWNERS.get(session_id)
+    return entry[0] if entry else None
+
+
+def _extract_pdf_source_text(payloads: list[bytes], mime_types: list[str]) -> dict[int, str]:
+    """Extract any native PDF text for quote checking. Scanned PDFs remain unverified."""
+    if len(payloads) != 1 or mime_types != ["application/pdf"]:
+        return {}
+    try:
+        reader = PdfReader(io.BytesIO(payloads[0]))
+        if len(reader.pages) > 20:
+            raise ValueError("PDFs are limited to 20 pages for this prototype.")
+        return {index + 1: (page.extract_text() or "") for index, page in enumerate(reader.pages)}
+    except ValueError:
+        raise
+    except Exception as exc:
+        logger.warning("Could not inspect PDF text layer (%s)", type(exc).__name__)
+        return {}
 
 
 @app.get('/health')
@@ -75,28 +136,26 @@ async def _run_agent_with_payload(payload_text: str, slug: str = 'nyaya-saathi')
     Returns: {session_id, answer}
     """
     runner = RUNNER
-    # Use a single shared user id for web sessions
-    user_id = agent_module.USER_ID
+    # A unique user ID prevents separate browser sessions from sharing ADK state.
+    # Do not wrap web runs in AgentFoundry's full-input recorder: payloads include
+    # extracted names, case identifiers and other sensitive legal-document facts.
+    user_id = uuid.uuid4().hex
     session = await runner.session_service.create_session(app_name=agent_module.APP_NAME, user_id=user_id)
+    _register_session(session.id, user_id)
 
     new_message = Content(role='user', parts=[Part(text=payload_text)])
     stream = runner.run_async(user_id=user_id, session_id=session.id, new_message=new_message)
 
-    # Collect text parts
     answer_parts: List[str] = []
-    try:
-        async for event in record(stream, slug=slug, input=payload_text, kit='google-adk-py', model=agent_module.MODEL):
-            content = getattr(event, 'content', None)
-            if content and getattr(content, 'parts', None):
-                for part in content.parts:
-                    text = getattr(part, 'text', None)
-                    if text:
-                        answer_parts.append(text)
-    except Exception as e:
-        raise
+    async for event in stream:
+        content = getattr(event, 'content', None)
+        if content and getattr(content, 'parts', None):
+            for part in content.parts:
+                text = getattr(part, 'text', None)
+                if text:
+                    answer_parts.append(text)
 
-    answer = ''.join(answer_parts)
-    return {'session_id': session.id, 'answer': answer}
+    return {'session_id': session.id, 'answer': ''.join(answer_parts)}
 
 
 IST = ZoneInfo('Asia/Kolkata')
@@ -120,33 +179,52 @@ async def analyze(
     if language not in ('kn', 'hi', 'en'):
         raise HTTPException(status_code=400, detail='language must be kn, hi or en')
 
-    if not files or len(files) == 0:
+    if not files:
         raise HTTPException(status_code=400, detail='No files uploaded')
     if len(files) > 3:
-        raise HTTPException(status_code=400, detail='Maximum 3 images allowed')
+        raise HTTPException(status_code=400, detail='Upload one PDF or up to three images.')
+
+    if received_date:
+        try:
+            parsed_received = datetime.strptime(received_date, '%Y-%m-%d')
+            if parsed_received.date().isoformat() != received_date:
+                raise ValueError
+        except ValueError:
+            raise HTTPException(status_code=400, detail='received_date must use YYYY-MM-DD.')
 
     images = []
-    mime_types = []
-    for f in files:
-        content = await f.read()
+    for upload in files:
+        # Read at most one byte over the per-file limit so oversized requests
+        # are rejected without buffering the whole file into memory.
+        content = await upload.read(MAX_FILE_BYTES + 1)
         images.append(content)
-        mime_types.append(f.content_type or 'application/octet-stream')
 
-    # Run extraction
     try:
-        extraction = extract_notice(images, mime_types)
-    except Exception as e:
-        # log unreadable
+        mime_types = validate_upload_payloads(images)
+        source_text_by_page = _extract_pdf_source_text(images, mime_types)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    # Run extraction. Do not return provider exceptions or document content to
+    # the browser; operational logs record only the exception class.
+    try:
+        extraction = await asyncio.to_thread(extract_notice, images, mime_types)
+    except Exception as exc:
+        logger.warning("Notice extraction failed (%s)", type(exc).__name__)
         log_event('unreadable', 'unknown', language)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=502, detail='The document could not be analysed. Please try a clearer file or try again.')
 
     # Log that a notice was explained (we haven't run the agent yet)
     log_event('notice_explained', getattr(extraction, 'doc_type', 'unknown'), language)
 
-    # Prepare payload for agent: include extraction JSON and user's language, received_date and district
+    # Prepare a structured, evidence-aware intake draft. Native PDF text can be
+    # used to check quote matching; image/scanned sources remain unverified.
     ext = extraction.model_dump()
     today = datetime.now(IST).date().isoformat()
     deadlines = deadlines_mod.compute_deadlines(ext['doc_type'], ext['dates'], received_date or None, today)
+    lawyer_brief = build_lawyer_brief(
+        ext, deadlines, language=language, source_text_by_page=source_text_by_page
+    )
     centers = dlsa_mod.find_center(district) if district else None
     payload_obj = {
         'extraction': ext,
@@ -162,8 +240,9 @@ async def analyze(
     # Run agent
     try:
         run_result = await _run_agent_with_payload(payload_text)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f'Agent run failed: {e}')
+    except Exception as exc:
+        logger.warning("ADK agent run failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=502, detail='The explanation could not be generated. Please try again.')
 
     urgent = _compute_urgent_flag(extraction, deadlines)
 
@@ -171,26 +250,38 @@ async def analyze(
     if urgent:
         log_event('sensitive_route', getattr(extraction, 'doc_type', 'unknown'), language)
 
-    return JSONResponse({'session_id': run_result['session_id'], 'answer_markdown': run_result['answer'], 'urgent': urgent})
+    return JSONResponse({
+        'session_id': run_result['session_id'],
+        'answer_markdown': run_result['answer'],
+        'urgent': urgent,
+        'lawyer_brief': lawyer_brief,
+    })
 
 
 @app.post('/chat')
 async def chat(session_id: str = Form(...), message: str = Form(...)):
+    if not message.strip():
+        raise HTTPException(status_code=400, detail='Message cannot be empty.')
+    if len(message) > 4000:
+        raise HTTPException(status_code=413, detail='Message must be 4000 characters or less.')
+    user_id = _session_owner(session_id)
+    if user_id is None:
+        raise HTTPException(status_code=404, detail='This session expired or is unavailable. Please analyse the notice again.')
     runner = RUNNER
-    user_id = agent_module.USER_ID
-    new_message = Content(role='user', parts=[Part(text=message)])
+    new_message = Content(role='user', parts=[Part(text=message.strip())])
     stream = runner.run_async(user_id=user_id, session_id=session_id, new_message=new_message)
     answer_parts: List[str] = []
     try:
-        async for event in record(stream, slug=agent_module.SLUG, input=message, kit='google-adk-py', model=agent_module.MODEL):
+        async for event in stream:
             content = getattr(event, 'content', None)
             if content and getattr(content, 'parts', None):
                 for part in content.parts:
                     text = getattr(part, 'text', None)
                     if text:
                         answer_parts.append(text)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as exc:
+        logger.warning("ADK follow-up failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=502, detail='The follow-up could not be generated. Please try again.')
 
     answer = ''.join(answer_parts)
     # Log follow-up question
@@ -200,6 +291,8 @@ async def chat(session_id: str = Form(...), message: str = Form(...)):
 
 @app.post('/feedback')
 async def feedback(session_id: str = Form(...), rating: int = Form(...)):
+    if _session_owner(session_id) is None:
+        raise HTTPException(status_code=404, detail='This session expired or is unavailable.')
     if rating not in (1, -1):
         raise HTTPException(status_code=400, detail='rating must be 1 or -1')
     entry = {'ts': datetime.utcnow().isoformat(), 'session_id': session_id, 'rating': rating}
