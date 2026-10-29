@@ -102,6 +102,44 @@ python test_pipeline.py path/to/notice.jpg
 
 The Dockerfile expects the repository root as its build context. Set `GOOGLE_API_KEY` and any model configuration through the hosting provider's secret/environment settings, never in source control. Run tests before deploying.
 
+
+## Lawyer review workspace (Phase 2)
+
+The private demo workspace is available at `/review`. It provides a queue, editable brief fields, review decisions, audit history and approved PDF/DOCX exports.
+
+Configure a high-entropy token in the hosting environment or in the uncommitted `.env.local` file:
+
+```bash
+export REVIEWER_API_TOKEN="$(openssl rand -hex 32)"
+```
+
+If using `.env.local`, add `REVIEWER_API_TOKEN=...` there and restart the server. The workspace is disabled when the token is not configured. Do not commit the token.
+
+From the result page, use **Save to lawyer review workspace**. This is an explicit operation that stores the extracted brief and review metadata in a local SQLite database; the original upload is not stored by this review store. The UI prompts for the token and sends it with the save request. Open `/review`, enter the token and a reviewer label, then select the case.
+
+Workspace capabilities:
+- List cases by `pending_review`, `changes_requested`, `approved`, or `rejected` status.
+- Correct only the whitelisted brief fields: summary, parties, demands/claims, dates/periods, legal provisions cited and information to confirm.
+- Record a correction note and an audit event with before/after values for changed fields.
+- Request changes or reject intake. Approval requires explicit confirmations that the source, extracted facts and date/deadline language were reviewed.
+- Export PDF or DOCX only after the current brief has been approved. Saving corrections to an approved brief resets it to pending review and removes its active approval metadata.
+- Permanently delete a case and its event history.
+
+API routes (all require `X-Reviewer-Token`; `X-Reviewer-Label` is a self-reported display label):
+- `GET /review` — review workspace UI
+- `GET /review/cases?status=pending_review` — list cases
+- `POST /review/cases` — create from a `schema_version: "1.0"` lawyer brief
+- `GET /review/cases/{case_id}` — retrieve a case and brief
+- `PUT /review/cases/{case_id}/brief` — save allowlisted corrections using `expected_revision`
+- `POST /review/cases/{case_id}/decision` — approve, request changes, or reject
+- `GET /review/cases/{case_id}/events` — audit history
+- `GET /review/cases/{case_id}/export?format=pdf` or `format=docx` — export approved brief
+- `DELETE /review/cases/{case_id}?confirm=true` — permanently delete the case and audit history
+
+Storage defaults to `.nyaya_saathi/review.sqlite3`; configure `REVIEW_DB_PATH` for a different location. The database contains personal information from extracted briefs. It is not encrypted by the application, so protect the host disk and backups. The self-reported reviewer label is not authenticated identity. This shared-token workflow is only for a private prototype/demo: do not expose it publicly or use it for live client matters before adding individual authentication, authorization, secure key management, encryption at rest, retention controls and security review. The audit trail is mutable local SQLite data, not tamper-evident or a regulated case record.
+
+PDF export uses installed Unicode fonts (the Docker image installs Noto core fonts). DOCX supports Unicode text, but exported documents must still be visually checked for the languages and fonts actually used.
+
 ## Before real use
 
 - [ ] Legal knowledge notes and jurisdiction rules are reviewed, sourced and dated by a qualified professional.
