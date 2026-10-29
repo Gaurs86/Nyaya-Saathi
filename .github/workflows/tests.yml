@@ -4,7 +4,7 @@ on:
   push:
     branches: ["master", "feature/**"]
   pull_request:
-    branches: ["master"]
+    branches: ["master", "feature/**"]
 
 jobs:
   pytest:
@@ -15,9 +15,17 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+      - name: Install Unicode fonts for PDF export tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-core
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt pytest
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check static/index.js
+          node --check static/review.js
       - name: Run tests
         run: PYTHONPATH=. pytest -q

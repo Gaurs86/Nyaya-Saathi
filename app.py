@@ -20,10 +20,11 @@ import time
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, Query
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from google.adk.runners import InMemoryRunner
 from google.genai.types import Content, Part
@@ -37,10 +38,13 @@ from rules import deadlines as deadlines_mod, dlsa as dlsa_mod
 import agent as agent_module
 from tools import legal_tools
 from metrics import log_event, aggregate_events
+import review_store
+from review_exports import export_pdf, export_docx, UnicodeFontUnavailable
 
 # App config
 PORT = int(os.getenv('PORT', '8000'))
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
+FRONTEND_DIST_DIR = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
 
 app = FastAPI(title='Nyaya Saathi Web')
 logger = logging.getLogger(__name__)
@@ -57,6 +61,9 @@ if CORS_ORIGINS:
         allow_headers=["Content-Type"],
     )
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
+frontend_assets_dir = os.path.join(FRONTEND_DIST_DIR, 'assets')
+if os.path.isdir(frontend_assets_dir):
+    app.mount('/assets', StaticFiles(directory=frontend_assets_dir), name='frontend-assets')
 
 # Simple feedback store
 FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), '.feedback.jsonl')
@@ -109,6 +116,218 @@ def _extract_pdf_source_text(payloads: list[bytes], mime_types: list[str]) -> di
         return {}
 
 
+# Review workspace request schemas. Only explicitly editable brief fields may be
+# changed; case status, revision and approval metadata are server-controlled.
+class CreateReviewCaseRequest(BaseModel):
+    brief: dict
+    title: str = Field(default="", max_length=120)
+
+
+class UpdateReviewBriefRequest(BaseModel):
+    changes: dict
+    expected_revision: int = Field(gt=0)
+    note: str = Field(default="", max_length=2000)
+
+
+class ReviewDecisionRequest(BaseModel):
+    decision: str
+    expected_revision: int = Field(gt=0)
+    note: str = Field(default="", max_length=2000)
+    confirmations: dict[str, bool] = Field(default_factory=dict)
+
+
+def _reviewer_access(token: Optional[str], label: Optional[str]) -> str:
+    """Validate the demo workspace token and return a display label.
+
+    The label is self-reported, not a verified identity. Use a real identity
+    provider and per-user permissions before deploying this to a public team.
+    """
+    if not os.getenv("REVIEWER_API_TOKEN"):
+        raise HTTPException(
+            status_code=503,
+            detail="Review workspace is disabled. Configure REVIEWER_API_TOKEN on the server.",
+        )
+    if not review_store.reviewer_token_matches(token):
+        raise HTTPException(status_code=401, detail="Invalid reviewer token.")
+    safe_label = (label or "reviewer").strip()[:80]
+    return safe_label or "reviewer"
+
+
+@app.on_event("startup")
+async def init_review_database():
+    review_store.init_db()
+
+
+@app.get("/review")
+async def review_workspace():
+    frontend_index = os.path.join(FRONTEND_DIST_DIR, "index.html")
+    if os.path.isfile(frontend_index):
+        return FileResponse(frontend_index)
+    return FileResponse(os.path.join(STATIC_DIR, "review.html"))
+
+
+@app.get("/review/summary")
+async def review_summary(
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    return JSONResponse(await asyncio.to_thread(review_store.status_counts))
+
+
+@app.get("/review/cases")
+async def review_list_cases(
+    status: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=200),
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    try:
+        return JSONResponse({"cases": await asyncio.to_thread(review_store.list_cases, status, limit)})
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/review/cases", status_code=201)
+async def review_create_case(
+    payload: CreateReviewCaseRequest,
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    actor = _reviewer_access(x_reviewer_token, x_reviewer_label)
+    if payload.brief.get("schema_version") != "1.0" or not isinstance(payload.brief.get("document"), dict):
+        raise HTTPException(status_code=400, detail="Unsupported brief schema. Create a brief with Nyaya-Saathi first.")
+    try:
+        case = await asyncio.to_thread(review_store.create_case, payload.brief, payload.title, actor)
+        return JSONResponse(case, status_code=201)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/review/cases/{case_id}")
+async def review_get_case(
+    case_id: str,
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    case = await asyncio.to_thread(review_store.get_case, case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Review case not found.")
+    return JSONResponse(case)
+
+
+@app.put("/review/cases/{case_id}/brief")
+async def review_update_brief(
+    case_id: str,
+    payload: UpdateReviewBriefRequest,
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    actor = _reviewer_access(x_reviewer_token, x_reviewer_label)
+    try:
+        case = await asyncio.to_thread(
+            review_store.update_brief, case_id, payload.changes,
+            payload.expected_revision, actor, payload.note,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        if str(exc) == "revision_conflict":
+            raise HTTPException(status_code=409, detail="This case changed since it was opened. Reload it before saving.")
+        raise
+    if case is None:
+        raise HTTPException(status_code=404, detail="Review case not found.")
+    return JSONResponse(case)
+
+
+@app.post("/review/cases/{case_id}/decision")
+async def review_decide_case(
+    case_id: str,
+    payload: ReviewDecisionRequest,
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    actor = _reviewer_access(x_reviewer_token, x_reviewer_label)
+    try:
+        case = await asyncio.to_thread(
+            review_store.decide_case, case_id, payload.decision,
+            payload.expected_revision, actor, payload.note, payload.confirmations,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RuntimeError as exc:
+        if str(exc) == "revision_conflict":
+            raise HTTPException(status_code=409, detail="This case changed since it was opened. Reload it before deciding.")
+        raise
+    if case is None:
+        raise HTTPException(status_code=404, detail="Review case not found.")
+    return JSONResponse(case)
+
+
+@app.get("/review/cases/{case_id}/events")
+async def review_case_events(
+    case_id: str,
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    events = await asyncio.to_thread(review_store.get_events, case_id)
+    if events is None:
+        raise HTTPException(status_code=404, detail="Review case not found.")
+    return JSONResponse({"events": events})
+
+
+@app.delete("/review/cases/{case_id}")
+async def review_delete_case(
+    case_id: str,
+    confirm: bool = Query(default=False),
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    if not confirm:
+        raise HTTPException(status_code=400, detail="Pass confirm=true to permanently delete this case and its audit history.")
+    deleted = await asyncio.to_thread(review_store.delete_case, case_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Review case not found.")
+    return JSONResponse({"deleted": True, "case_id": case_id})
+
+
+@app.get("/review/cases/{case_id}/export")
+async def review_export_case(
+    case_id: str,
+    format: str = Query(default="pdf", pattern="^(pdf|docx)$"),
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
+):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
+    case = await asyncio.to_thread(review_store.get_case, case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Review case not found.")
+    if case["status"] != "approved":
+        raise HTTPException(status_code=409, detail="Only a brief approved in the review workspace can be exported as a reviewed deliverable.")
+    try:
+        if format == "pdf":
+            data = await asyncio.to_thread(export_pdf, case)
+            media_type = "application/pdf"
+            filename = f"nyaya-saathi-{case_id[:12]}-reviewed.pdf"
+        else:
+            data = await asyncio.to_thread(export_docx, case)
+            media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            filename = f"nyaya-saathi-{case_id[:12]}-reviewed.docx"
+    except UnicodeFontUnavailable as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        logger.warning("Review export failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=500, detail="The export could not be generated.")
+    return StreamingResponse(
+        iter([data]), media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @app.get('/health')
 async def health():
     return JSONResponse('ok')
@@ -127,6 +346,9 @@ async def districts_csv():
 
 @app.get('/')
 async def index():
+    frontend_index = os.path.join(FRONTEND_DIST_DIR, 'index.html')
+    if os.path.isfile(frontend_index):
+        return FileResponse(frontend_index)
     return FileResponse(os.path.join(STATIC_DIR, 'index.html'))
 
 
@@ -173,8 +395,11 @@ async def analyze(
     files: List[UploadFile] = File(...),
     language: str = Form(...),
     received_date: Optional[str] = Form(''),
-    district: Optional[str] = Form('')
+    district: Optional[str] = Form(''),
+    x_reviewer_token: Optional[str] = Header(default=None, alias="X-Reviewer-Token"),
+    x_reviewer_label: Optional[str] = Header(default=None, alias="X-Reviewer-Label"),
 ):
+    _reviewer_access(x_reviewer_token, x_reviewer_label)
     # Validate language
     if language not in ('kn', 'hi', 'en'):
         raise HTTPException(status_code=400, detail='language must be kn, hi or en')

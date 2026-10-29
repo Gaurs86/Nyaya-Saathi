@@ -7,3 +7,11 @@ nyaya-saathi/data/events.jsonl
 .DS_Store
 .codenow/
 files*
+.nyaya_saathi/
+frontend/node_modules/
+frontend/dist/
+# Local synthetic evaluation PDFs, output briefs (may contain client data), and reports.
+evals/actual/
+evals/generated/
+evals/reports/
+evals/report.json
