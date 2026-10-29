@@ -12,6 +12,7 @@ import json
 import os
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -47,8 +48,18 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
+@contextmanager
+def _db():
+    conn = _connect()
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
+
+
 def init_db() -> None:
-    with _connect() as conn:
+    with _db() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS review_cases (
                 case_id TEXT PRIMARY KEY,
@@ -125,7 +136,7 @@ def create_case(brief: dict, title: str = "", actor_label: str = "reviewer") -> 
     stored_brief = json.loads(_json_dumps(brief))
     stored_brief["review_status"] = "draft_pending_lawyer_review"
     stored_brief.pop("reviewer_approval", None)
-    with _connect() as conn:
+    with _db() as conn:
         conn.execute(
             """INSERT INTO review_cases
             (case_id, title, doc_type, status, revision, brief_json, created_at, updated_at, created_by)
@@ -144,7 +155,7 @@ def list_cases(status: str | None = None, limit: int = 100) -> list[dict]:
     if status is not None and status not in CASE_STATUSES:
         raise ValueError("Unsupported case status.")
     limit = max(1, min(int(limit), 200))
-    with _connect() as conn:
+    with _db() as conn:
         if status:
             rows = conn.execute(
                 "SELECT * FROM review_cases WHERE status=? ORDER BY updated_at DESC LIMIT ?",
@@ -158,13 +169,13 @@ def list_cases(status: str | None = None, limit: int = 100) -> list[dict]:
 
 
 def get_case(case_id: str) -> dict | None:
-    with _connect() as conn:
+    with _db() as conn:
         row = conn.execute("SELECT * FROM review_cases WHERE case_id=?", (case_id,)).fetchone()
         return _case_from_row(row) if row else None
 
 
 def get_events(case_id: str) -> list[dict] | None:
-    with _connect() as conn:
+    with _db() as conn:
         exists = conn.execute("SELECT 1 FROM review_cases WHERE case_id=?", (case_id,)).fetchone()
         if not exists:
             return None
@@ -208,7 +219,7 @@ def update_brief(
             raise ValueError(f"{key} may contain at most 200 items.")
 
     now = utc_now()
-    with _connect() as conn:
+    with _db() as conn:
         row = conn.execute("SELECT * FROM review_cases WHERE case_id=?", (case_id,)).fetchone()
         if not row:
             return None
@@ -272,7 +283,7 @@ def decide_case(
 
     now = utc_now()
     actor = (actor_label or "reviewer").strip()[:80] or "reviewer"
-    with _connect() as conn:
+    with _db() as conn:
         row = conn.execute("SELECT * FROM review_cases WHERE case_id=?", (case_id,)).fetchone()
         if not row:
             return None
@@ -310,7 +321,7 @@ def decide_case(
 
 def delete_case(case_id: str, actor_label: str = "reviewer") -> bool:
     """Hard-delete a case and its event history. This also removes its audit trail."""
-    with _connect() as conn:
+    with _db() as conn:
         row = conn.execute("SELECT 1 FROM review_cases WHERE case_id=?", (case_id,)).fetchone()
         if not row:
             return False
