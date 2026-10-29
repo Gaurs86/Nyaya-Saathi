@@ -10,58 +10,110 @@
         "document_type": "eviction_or_rent",
         "readable": true,
         "parties": [
-          {"role": "sender", "name": "Kavita Sharma"},
-          {"role": "recipient", "name": "Arjun Mehta"}
+          {
+            "role": "sender",
+            "name": "Kavita Sharma"
+          },
+          {
+            "role": "recipient",
+            "name": "Arjun Mehta"
+          }
         ],
         "dates": [
-          {"date": "2026-10-12"},
-          {"duration_days": 15, "duration_from": "receipt"}
+          {
+            "date": "2026-10-12"
+          },
+          {
+            "duration_days": 15,
+            "duration_from": "receipt"
+          }
         ],
         "provisions": [],
-        "demand_phrases": ["pay the claimed rent"],
-        "evidence_phrases": ["Kavita Sharma", "Arjun Mehta", "Rs. 18000"]
+        "demand_phrases": [
+          "pay the claimed rent"
+        ],
+        "evidence_phrases": [
+          "Kavita Sharma",
+          "Arjun Mehta",
+          "Rs. 18000"
+        ]
       }
     },
     {
       "case_id": "synthetic-summons-001",
       "title": "Synthetic court summons",
-      "notice_text": "SYNTHETIC DEMONSTRATION SUMMONS - NOT A REAL COURT DOCUMENT\nSample Civil Court, Bengaluru\nFile No.: CIV/DEMO/2026/42\nDate: 20 October 2026\nIssued by: Registry Clerk, Sample Civil Court\nPerson summoned: Rohan Iyer\nYou are requested to appear at Sample Civil Court, Room 3, on 18 November 2026 at 10:30 AM.\nThis fictional text is created only to test software extraction. It does not correspond to any real case or court.",
+      "notice_text": "SYNTHETIC DEMONSTRATION SUMMONS - NOT A REAL COURT DOCUMENT\nSample Civil Court, Bengaluru\nFrom: Sample Civil Court\nTo: Rohan Iyer (person summoned)\nFile No.: CIV/DEMO/2026/42\nDate: 20 October 2026\nYou are requested to appear at Sample Civil Court, Room 3, on 18 November 2026 at 10:30 AM.\nThis fictional text is created only to test software extraction. It does not correspond to any real case or court.",
       "expected": {
         "document_type": "court_summons",
         "readable": true,
         "parties": [
-          {"role": "recipient", "name": "Rohan Iyer"}
+          {
+            "role": "recipient",
+            "name": "Rohan Iyer"
+          }
         ],
         "dates": [
-          {"date": "2026-10-20"},
-          {"date": "2026-11-18"}
+          {
+            "date": "2026-10-20"
+          },
+          {
+            "date": "2026-11-18"
+          }
         ],
         "provisions": [],
-        "demand_phrases": ["appear at Sample Civil Court"],
-        "evidence_phrases": ["Rohan Iyer", "CIV/DEMO/2026/42", "18 November 2026"]
+        "demand_phrases": [
+          "appear at Sample Civil Court"
+        ],
+        "evidence_phrases": [
+          "Rohan Iyer",
+          "CIV/DEMO/2026/42",
+          "18 November 2026"
+        ]
       }
     },
     {
       "case_id": "synthetic-cheque-001",
       "title": "Synthetic cheque-related notice",
-      "notice_text": "SYNTHETIC DEMONSTRATION NOTICE - NOT A REAL LEGAL NOTICE\nDate: 22 October 2026\nFrom: Advocate Meera Rao, representing fictional client Nila Enterprises\nTo: Dev Malhotra of Dev Traders\nThe fictional client states that cheque number DEMO-004 for Rs. 25000 was issued on 02 October 2026 and returned unpaid on 05 October 2026.\nThis fictional text refers to Section 138 of the Negotiable Instruments Act, 1881. The sender requests payment or a written response about the stated claim.\nNo reply period or legal deadline is specified in this sample. This document is only a software test fixture and does not describe a real dispute.",
+      "notice_text": "SYNTHETIC DEMONSTRATION NOTICE - NOT A REAL LEGAL NOTICE\nDate: 22 October 2026\nFrom: Advocate Meera Rao\nTo: Dev Malhotra\nThe fictional sender states that cheque number DEMO-004 for Rs. 25000 was issued on 02 October 2026 and returned unpaid on 05 October 2026.\nThis fictional text refers to Section 138 of the Negotiable Instruments Act, 1881. The sender requests payment or a written response about the stated claim.\nNo reply period or legal deadline is specified in this sample. This document is only a software test fixture and does not describe a real dispute.",
       "expected": {
         "document_type": "cheque_bounce_138",
         "readable": true,
         "parties": [
-          {"role": "sender", "name": "Meera Rao"},
-          {"role": "recipient", "name": "Dev Malhotra"}
+          {
+            "role": "sender",
+            "name": "Meera Rao"
+          },
+          {
+            "role": "recipient",
+            "name": "Dev Malhotra"
+          }
         ],
         "dates": [
-          {"date": "2026-10-22"},
-          {"date": "2026-10-02"},
-          {"date": "2026-10-05"}
+          {
+            "date": "2026-10-22"
+          },
+          {
+            "date": "2026-10-02"
+          },
+          {
+            "date": "2026-10-05"
+          }
         ],
         "provisions": [
-          {"act": "Negotiable Instruments Act, 1881", "section": "138"}
+          {
+            "act": "Negotiable Instruments Act, 1881",
+            "section": "138"
+          }
         ],
-        "demand_phrases": ["payment or a written response"],
-        "evidence_phrases": ["Meera Rao", "Dev Malhotra", "DEMO-004", "Section 138"]
+        "demand_phrases": [
+          "payment or a written response"
+        ],
+        "evidence_phrases": [
+          "Meera Rao",
+          "Dev Malhotra",
+          "DEMO-004",
+          "Section 138"
+        ]
       }
     }
   ]
