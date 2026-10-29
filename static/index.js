@@ -231,7 +231,7 @@ const GUIDE = {
 };
 const VOICE = { en: "en-IN", hi: "hi-IN", kn: "kn-IN" };
 const $ = id => document.getElementById(id);
-let lang = "en", files = [], session = "", timer = null, currentBrief = null;
+let lang = "en", files = [], session = "", timer = null, currentBrief = null, currentView = "dashboard";
 
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const isPdf = f => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
@@ -269,6 +269,12 @@ function applyLang() {
   $("helpText").textContent = GUIDE[lang];
   $("q").placeholder = d.ph;
   $("lang").value = lang;
+  if ($("pageTitle")) {
+    const titleKeys = {dashboard:"dashboardTitle",upload:"uploadPageTitle",reports:"reportsTitle",resources:"resourcesTitle"};
+    const subtitleKeys = {dashboard:"dashboardSubtitle",upload:"uploadPageSubtitle",reports:"reportsPageSubtitle",resources:"resourcesPageSubtitle"};
+    $("pageTitle").textContent = d[titleKeys[currentView] || "dashboardTitle"];
+    $("pageSubtitle").textContent = d[subtitleKeys[currentView] || "dashboardSubtitle"];
+  }
   renderThumbs();
 }
 $("lang").onchange = e => { lang = e.target.value; applyLang(); };
@@ -276,6 +282,7 @@ $("lang").onchange = e => { lang = e.target.value; applyLang(); };
 function setView(view) {
   const views = ["dashboard", "upload", "reports", "resources"];
   if (!views.includes(view)) view = "dashboard";
+  currentView = view;
   for (const name of views) $(name + "View").hidden = name !== view;
   document.querySelectorAll("[data-view]").forEach(el => {
     const active = el.dataset.view === view;
