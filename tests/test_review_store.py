@@ -97,7 +97,7 @@ def test_revision_conflict_prevents_overwriting_newer_edits(db):
 
 def test_changes_requested_requires_reason(db):
     case = review_store.create_case(sample_brief())
-    with pytest.raises(ValueError, match="Add a note"):
+    with pytest.raises(ValueError, match="short note"):
         review_store.decide_case(
             case["case_id"], "changes_requested", expected_revision=1, note="   "
         )
