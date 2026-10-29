@@ -72,11 +72,18 @@ async function connect() {
   try {
     await refreshQueue();
     $("workspace").hidden = false;
+    $("auth").hidden = true;
+    $("disconnect").hidden = false;
+    $("token").value = "";
+    $("reviewer").value = "";
     feedback("authMessage","Connected. Token remains only in this page's memory.","success");
     const caseId = new URLSearchParams(location.search).get("case_id");
     if (caseId) await openCase(caseId);
   } catch (err) {
     token = "";
+    $("auth").hidden = false;
+    $("workspace").hidden = true;
+    $("disconnect").hidden = true;
     feedback("authMessage",err.message);
   }
 }
@@ -357,6 +364,21 @@ $("addParty").onclick=()=>addRow("partiesEditor","parties",{role:"other"});
 $("addDate").onclick=()=>addRow("datesEditor","dates_and_periods",{label:"",original_text:""});
 $("addProvision").onclick=()=>addRow("provisionsEditor","legal_provisions_cited",{act:"",section:""});
 $("connect").onclick=connect;
+$("disconnect").onclick=()=>{
+  token = "";
+  reviewer = "";
+  selectedCase = null;
+  cases = [];
+  $("workspace").hidden = true;
+  $("auth").hidden = false;
+  $("disconnect").hidden = true;
+  $("token").value = "";
+  $("reviewer").value = "";
+  $("details").hidden = true;
+  $("noCase").hidden = false;
+  feedback("authMessage","");
+  feedback("message","");
+};
 $("refresh").onclick=()=>refreshQueue().catch(err=>feedback("message",err.message));
 $("statusFilter").onchange=()=>{
   const queueView = $("statusFilter").value === "pending_review";
