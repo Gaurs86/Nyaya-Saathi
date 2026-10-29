@@ -154,3 +154,21 @@ PDF export uses installed Unicode fonts (the Docker image installs Noto core fon
 - [ ] Privacy notice matches the configured model provider and any recording/persistence.
 - [ ] Real-client data is not sent through the CLI recorder and is handled only under an approved data-processing arrangement.
 - [ ] A qualified professional reviews the intake brief before it is used for a matter.
+
+## Extraction evaluation and regression testing (Phase 3)
+
+The `evals/` directory contains a deterministic scoring harness and three fictional English-language notice samples. It compares the downloaded lawyer-intake brief against expected labels for document type, readability, parties, dates/periods, cited provisions, selected demand phrases and evidence snippets.
+
+See [`evals/README.md`](evals/README.md) for the complete workflow. From the repository root:
+
+```bash
+python evals/generate_fixtures.py
+uvicorn app:app --reload
+# Upload each generated PDF at http://127.0.0.1:8000 and save its downloaded brief as
+# evals/actual/<case-id>.json, then in another terminal:
+python -m evals.run_evaluation
+python -m evals.run_evaluation --strict
+```
+
+The evaluator is offline and deterministic after actual JSON outputs have been collected; it does not call Gemini itself. It measures extraction regression, not legal validity, legal deadline correctness, or legal advice quality. A benchmark used to assess real notices must have human-reviewed labels based on the original source. Never commit real notices or their outputs. The local `evals/actual/`, `evals/generated/` and `evals/reports/` paths are ignored by Git, but this is not encryption or access control.
+
