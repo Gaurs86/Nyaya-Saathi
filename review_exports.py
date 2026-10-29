@@ -147,14 +147,15 @@ def export_pdf(case: dict) -> bytes:
 
     story = [
         Paragraph("Nyaya-Saathi - Lawyer Intake Brief", styles["NyayaTitle"]),
+        _pdf_labeled("Matter title", case.get("title"), styles["NyayaBody"]),
         _pdf_paragraph(f"Status: {str(case.get('status', '')).replace('_', ' ').upper()}", styles["NyayaBody"]),
         _pdf_paragraph(f"Case ID: {case.get('case_id')}", styles["NyayaSmall"]),
-        _pdf_paragraph(f"Revision: {case.get('revision')} · Updated: {case.get('updated_at')}", styles["NyayaSmall"]),
+        _pdf_paragraph(f"Revision: {case.get('revision')} | Updated: {case.get('updated_at')}", styles["NyayaSmall"]),
     ]
     approval = brief.get("reviewer_approval") or {}
     if case.get("status") == "approved":
         story.append(_pdf_paragraph(
-            f"Reviewed by: {approval.get('reviewer_label', 'reviewer')} · {approval.get('reviewed_at', '')}",
+            f"Reviewed by: {approval.get('reviewer_label', 'reviewer')} | {approval.get('reviewed_at', '')}",
             styles["NyayaBody"],
         ))
     else:
@@ -261,7 +262,7 @@ def export_pdf(case: dict) -> bytes:
         canvas.saveState()
         canvas.setFont(font, 7)
         canvas.setFillColor(colors.HexColor("#52606D"))
-        canvas.drawString(18*mm, 9*mm, "Confidential matter information — handle according to organisation policy.")
+        canvas.drawString(18*mm, 9*mm, "Contains personal/legal matter information - handle according to organisation policy.")
         canvas.drawRightString(A4[0] - 18*mm, 9*mm, f"Page {document.page}")
         canvas.restoreState()
 
@@ -282,12 +283,12 @@ def export_docx(case: dict) -> bytes:
     normal.font.name = "Noto Sans"
     normal.font.size = Pt(9)
 
-    document.add_heading("Nyaya-Saathi — Lawyer Intake Brief", 0)
-    document.add_paragraph(f"Status: {str(case.get('status', '')).replace('_', ' ').upper()}")
-    document.add_paragraph(f"Case ID: {case.get('case_id')} · Revision: {case.get('revision')} · Updated: {case.get('updated_at')}")
+    document.add_heading("Nyaya-Saathi - Lawyer Intake Brief", 0)
+    document.add_paragraph(f"Matter title: {case.get('title')}")\n    document.add_paragraph(f"Status: {str(case.get('status', '')).replace('_', ' ').upper()}")
+    document.add_paragraph(f"Case ID: {case.get('case_id')} | Revision: {case.get('revision')} | Updated: {case.get('updated_at')}")
     approval = brief.get("reviewer_approval") or {}
     if case.get("status") == "approved":
-        document.add_paragraph(f"Reviewed by: {approval.get('reviewer_label', 'reviewer')} · {approval.get('reviewed_at', '')}")
+        document.add_paragraph(f"Reviewed by: {approval.get('reviewer_label', 'reviewer')} | {approval.get('reviewed_at', '')}")
     else:
         p = document.add_paragraph()
         run = p.add_run("DRAFT — NOT APPROVED FOR RELIANCE")
