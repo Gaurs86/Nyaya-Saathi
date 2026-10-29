@@ -33,6 +33,9 @@ def test_rejects_per_file_limit():
 
 
 def test_rejects_combined_limit():
-    payload = b"\xff\xd8\xff" + b"a" * (MAX_FILE_BYTES - 1)
+    # Each file is below the individual limit, but together exceed 20 MiB.
+    payload = b"\xff\xd8\xff" + b"a" * (10 * 1024 * 1024)
+    assert len(payload) < MAX_FILE_BYTES
+    assert len(payload) * 2 > MAX_TOTAL_BYTES
     with pytest.raises(ValueError, match="Combined"):
         validate_upload_payloads([payload, payload])
