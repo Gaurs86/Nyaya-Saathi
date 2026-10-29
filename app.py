@@ -46,7 +46,16 @@ app = FastAPI(title='Nyaya Saathi Web')
 logger = logging.getLogger(__name__)
 # One shared runner: InMemoryRunner keeps sessions in memory, so /chat must reuse the same one as /analyze
 RUNNER = InMemoryRunner(agent=agent_module.root_agent, app_name=agent_module.APP_NAME)
-app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
+# Same-origin use needs no CORS. Set CORS_ORIGINS to a comma-separated allowlist
+# only if a separately hosted frontend needs access to this API.
+CORS_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+if CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 
 # Simple feedback store
