@@ -15,6 +15,18 @@ h2{font-size:1.12rem;margin:0 0 12px}h3{font-size:1rem;margin:18px 0 8px}
 label{font-weight:650;font-size:.91rem;display:block;margin-bottom:5px}
 input,textarea,select{font:inherit;color:inherit;background:white;border:1px solid #aab6c2;border-radius:8px;padding:10px;width:100%}
 textarea{min-height:320px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;tab-size:2}
+.form-textarea{min-height:84px;font:inherit}
+.editor-section{padding:12px 0;border-top:1px solid var(--line)}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.section-head h3{margin:4px 0 8px}
+.field-card{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;background:#fbfcfd}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field-grid .wide{grid-column:1/-1}
+.field-grid label{font-size:.82rem}
+.field-grid input{padding:8px;font-size:.92rem}
+.field-card .actions{margin-top:8px}
+.evidence-item{border-top:1px solid var(--line);padding:9px 0;overflow-wrap:anywhere}
+.evidence-item:first-child{border-top:0}
 button,.button{border:1px solid var(--brand);border-radius:9px;background:var(--brand);color:white;font:inherit;font-weight:650;padding:9px 13px;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;gap:7px}
 button.secondary,.button.secondary{background:white;color:var(--brand)}button.danger{background:var(--red);border-color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
@@ -72,8 +84,35 @@ button.secondary,.button.secondary{background:white;color:var(--brand)}button.da
           <div class="notice"><strong>Review boundary:</strong> Approval means the reviewer has checked the draft for their workflow. It is not a guarantee of legal validity and does not replace professional judgment.</div>
 
           <h3>Editable brief fields</h3>
-          <p class="muted">Edit the JSON below. Only the listed fields are accepted. Saving corrections increments the revision and resets an existing approval.</p>
-          <textarea id="editor" spellcheck="false" aria-label="Editable intake brief fields"></textarea>
+          <p class="muted">Correct the extracted facts using the source document. Quote evidence remains visible for comparison. Saving corrections increments the revision and resets an existing approval.</p>
+          <label for="summaryEdit">Plain-language summary</label>
+          <textarea id="summaryEdit" class="form-textarea" aria-label="Summary"></textarea>
+
+          <div class="editor-section">
+            <div class="section-head"><h3>Parties</h3><button id="addParty" type="button" class="secondary">Add party</button></div>
+            <div id="partiesEditor"></div>
+          </div>
+          <div class="editor-section">
+            <label for="demandsEdit">Demands or claims (one per line)</label>
+            <textarea id="demandsEdit" class="form-textarea" aria-label="Demands or claims"></textarea>
+          </div>
+          <div class="editor-section">
+            <div class="section-head"><h3>Dates and periods</h3><button id="addDate" type="button" class="secondary">Add date / period</button></div>
+            <div id="datesEditor"></div>
+            <p class="muted">Calculated dates are preliminary. Editing this section invalidates previous calculations and requires a fresh independent review.</p>
+          </div>
+          <div class="editor-section">
+            <div class="section-head"><h3>Legal provisions cited</h3><button id="addProvision" type="button" class="secondary">Add provision</button></div>
+            <div id="provisionsEditor"></div>
+          </div>
+          <div class="editor-section">
+            <label for="informationEdit">Information to confirm (one item per line)</label>
+            <textarea id="informationEdit" class="form-textarea" aria-label="Information to confirm"></textarea>
+          </div>
+          <div class="editor-section">
+            <h3>Extracted evidence (read-only)</h3>
+            <div id="evidenceList"></div>
+          </div>
           <label for="correctionNote">Correction note (optional)</label>
           <input id="correctionNote" maxlength="2000" placeholder="Why were these fields changed?">
           <div class="actions"><button id="saveChanges">Save corrections</button><button class="secondary" id="reloadCase">Discard local edits / reload</button></div>
