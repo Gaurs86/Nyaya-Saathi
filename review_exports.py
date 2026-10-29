@@ -158,7 +158,7 @@ def export_pdf(case: dict) -> bytes:
             styles["NyayaBody"],
         ))
     else:
-        story.append(_pdf_paragraph("DRAFT — NOT APPROVED FOR RELIANCE", styles["NyayaHeading"]))
+        story.append(_pdf_paragraph("DRAFT - NOT APPROVED FOR RELIANCE", styles["NyayaHeading"]))
 
     def heading(label: str):
         story.append(Paragraph(escape(label), styles["NyayaHeading"]))
