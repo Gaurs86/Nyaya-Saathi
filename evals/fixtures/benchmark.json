@@ -48,6 +48,10 @@
         "readable": true,
         "parties": [
           {
+            "role": "sender",
+            "name": "Sample Civil Court"
+          },
+          {
             "role": "recipient",
             "name": "Rohan Iyer"
           }
