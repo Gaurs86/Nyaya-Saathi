@@ -1,6 +1,24 @@
 const $ = id => document.getElementById(id);
 let token = "", reviewer = "", selectedCase = null, cases = [];
 
+function setReviewView(view, updateUrl = true) {
+  const queueView = view === "queue";
+  $("statusFilter").value = queueView ? "pending_review" : "";
+  $("navReviewQueue").classList.toggle("active", queueView);
+  $("navReviewQueue").setAttribute("aria-current", queueView ? "page" : "false");
+  $("navAllCases").classList.toggle("active", !queueView);
+  $("navAllCases").setAttribute("aria-current", queueView ? "false" : "page");
+  if (updateUrl) {
+    const next = new URL(window.location.href);
+    next.searchParams.set("view", queueView ? "queue" : "all");
+    next.searchParams.delete("case_id");
+    history.replaceState(null, "", next.pathname + next.search);
+  }
+  if (token && !$("workspace").hidden) {
+    refreshQueue().catch(err => feedback("message", err.message));
+  }
+}
+
 const ROW_FIELDS = {
   parties: [
     {key:"role", label:"Role", type:"select", options:["sender","recipient","petitioner","respondent","other"]},
@@ -340,7 +358,14 @@ $("addDate").onclick=()=>addRow("datesEditor","dates_and_periods",{label:"",orig
 $("addProvision").onclick=()=>addRow("provisionsEditor","legal_provisions_cited",{act:"",section:""});
 $("connect").onclick=connect;
 $("refresh").onclick=()=>refreshQueue().catch(err=>feedback("message",err.message));
-$("statusFilter").onchange=()=>refreshQueue().catch(err=>feedback("message",err.message));
+$("statusFilter").onchange=()=>{
+  const queueView = $("statusFilter").value === "pending_review";
+  $("navReviewQueue").classList.toggle("active", queueView);
+  $("navAllCases").classList.toggle("active", !queueView);
+  refreshQueue().catch(err=>feedback("message",err.message));
+};
+$("navReviewQueue").onclick=()=>setReviewView("queue");
+$("navAllCases").onclick=()=>setReviewView("all");
 $("saveChanges").onclick=saveCorrections;
 $("reloadCase").onclick=()=>selectedCase && openCase(selectedCase.case_id);
 $("approve").onclick=()=>decide("approved");
@@ -349,3 +374,6 @@ $("reject").onclick=()=>decide("rejected");
 $("exportPdf").onclick=()=>exportFile("pdf");
 $("exportDocx").onclick=()=>exportFile("docx");
 $("deleteCase").onclick=deleteCase;
+
+const initialReviewView = new URLSearchParams(window.location.search).get("view") === "queue" ? "queue" : "all";
+setReviewView(initialReviewView, false);
