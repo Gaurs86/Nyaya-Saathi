@@ -1,17 +1,36 @@
 const $ = id => document.getElementById(id);
 let token = "", reviewer = "", selectedCase = null, cases = [];
-const EDITABLE_FIELDS = ["summary","parties","demands_or_claims","dates_and_periods","legal_provisions_cited","information_to_confirm"];
+
+const ROW_FIELDS = {
+  parties: [
+    {key:"role", label:"Role", type:"select", options:["sender","recipient","petitioner","respondent","other"]},
+    {key:"name", label:"Name"},
+    {key:"source_quote", label:"Source quote", wide:true},
+    {key:"page_number", label:"Page number", type:"number"}
+  ],
+  dates_and_periods: [
+    {key:"label", label:"Date / period label"},
+    {key:"original_text", label:"Exact wording in notice", wide:true},
+    {key:"date_as_written_iso", label:"Date (YYYY-MM-DD)", type:"date"},
+    {key:"duration_days_as_written", label:"Duration in days", type:"number"},
+    {key:"duration_from_as_written", label:"Period starts from", type:"select", options:["receipt","notice_date","other"]},
+    {key:"page_number", label:"Page number", type:"number"}
+  ],
+  legal_provisions_cited: [
+    {key:"act", label:"Act / rule"},
+    {key:"section", label:"Section / clause"},
+    {key:"source_quote", label:"Source quote", wide:true},
+    {key:"page_number", label:"Page number", type:"number"}
+  ]
+};
 
 function feedback(target, message, kind="error") {
-  $(target).innerHTML = "";
+  $(target).replaceChildren();
   if (!message) return;
   const node = document.createElement("div");
   node.className = kind;
   node.textContent = message;
   $(target).appendChild(node);
-}
-function esc(value) {
-  return String(value ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 }
 async function api(path, options={}) {
   const headers = new Headers(options.headers || {});
@@ -27,6 +46,7 @@ async function api(path, options={}) {
   return response;
 }
 function statusLabel(status) { return String(status || "").replaceAll("_"," "); }
+
 async function connect() {
   token = $("token").value.trim();
   reviewer = $("reviewer").value.trim() || "reviewer";
@@ -42,6 +62,7 @@ async function connect() {
     feedback("authMessage",err.message);
   }
 }
+
 async function refreshQueue() {
   const filter = $("statusFilter").value;
   const path = "/review/cases" + (filter ? "?status=" + encodeURIComponent(filter) : "");
@@ -62,24 +83,172 @@ async function refreshQueue() {
     button.append(title,type,status,meta); button.onclick=()=>openCase(item.case_id); list.appendChild(button);
   }
 }
-function editableFields(brief) {
-  const result={};
-  for(const field of EDITABLE_FIELDS) {
-    if (field in brief) result[field]=brief[field];
-    else result[field] = field==="summary" ? "" : [];
+
+function makeField(spec, value) {
+  const wrapper = document.createElement("div");
+  if (spec.wide) wrapper.className = "wide";
+  const label = document.createElement("label");
+  label.textContent = spec.label;
+  const input = spec.type === "select" ? document.createElement("select") : document.createElement("input");
+  if (spec.type === "select") {
+    const empty = document.createElement("option"); empty.value=""; empty.textContent="Select…"; input.appendChild(empty);
+    for (const optionValue of (spec.options || [])) {
+      const opt=document.createElement("option"); opt.value=optionValue; opt.textContent=optionValue.replaceAll("_"," "); input.appendChild(opt);
+    }
+  } else if (spec.type) {
+    input.type = spec.type;
+  } else {
+    input.type = "text";
   }
-  return result;
+  input.dataset.field = spec.key;
+  input.value = value == null ? "" : String(value);
+  if (spec.type === "number") input.min = "1";
+  label.htmlFor = "field-" + spec.key + "-" + Math.random().toString(36).slice(2,9);
+  input.id = label.htmlFor;
+  wrapper.append(label,input);
+  return wrapper;
 }
+
+function addRow(containerId, kind, item={}) {
+  const container = $(containerId);
+  const card = document.createElement("div");
+  card.className = "field-card";
+  card.dataset.kind = kind;
+  card.dataset.original = JSON.stringify(item);
+  const grid = document.createElement("div");
+  grid.className = "field-grid";
+  for (const spec of ROW_FIELDS[kind]) {
+    grid.appendChild(makeField(spec, item[spec.key]));
+  }
+  card.appendChild(grid);
+
+  if (kind === "dates_and_periods" && item.preliminary_assessment) {
+    const assessment = item.preliminary_assessment;
+    const p = document.createElement("p");
+    p.className = "muted date-assessment";
+    const dateText = assessment.due_date || "No date calculated";
+    p.textContent = "Existing preliminary calculation: " + dateText + ". Status: " +
+      (assessment.status || "not specified") + ". Basis: " + (assessment.basis || "not recorded") +
+      ". Any date-period edit invalidates this calculation.";
+    card.appendChild(p);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  const remove = document.createElement("button");
+  remove.type = "button"; remove.className = "secondary"; remove.textContent = "Remove row";
+  remove.onclick = () => card.remove();
+  actions.appendChild(remove); card.appendChild(actions);
+  container.appendChild(card);
+}
+
+function renderRows(containerId, kind, items) {
+  const container = $(containerId); container.replaceChildren();
+  if (!items || items.length === 0) {
+    const p=document.createElement("p");p.className="muted";p.textContent="No entries extracted. Add one if the source document supports it.";
+    container.appendChild(p);
+    return;
+  }
+  items.forEach(item => addRow(containerId, kind, item));
+}
+function renderEvidence(items) {
+  const container=$("evidenceList");container.replaceChildren();
+  if (!items || !items.length) {
+    const p=document.createElement("p");p.className="muted";p.textContent="No evidence passages were extracted. Verify important facts manually.";
+    container.appendChild(p);return;
+  }
+  for(const item of items) {
+    const block=document.createElement("div");block.className="evidence-item";
+    const title=document.createElement("strong");title.textContent=(item.field || "Evidence") + (item.page_number ? " · page "+item.page_number : "");
+    const quote=document.createElement("p");quote.textContent="“"+(item.quote || "")+"”";
+    const status=document.createElement("p");status.className="muted";
+    status.textContent="Quote match: "+(item.quote_match_status || "not verified")+" · "+(item.verification_status || "requires human review");
+    block.append(title,quote,status);container.appendChild(block);
+  }
+}
+function renderFields(brief) {
+  $("summaryEdit").value = brief.summary || "";
+  $("demandsEdit").value = (brief.demands_or_claims || []).join("\n");
+  $("informationEdit").value = (brief.information_to_confirm || []).join("\n");
+  renderRows("partiesEditor","parties",brief.parties || []);
+  renderRows("datesEditor","dates_and_periods",brief.dates_and_periods || []);
+  renderRows("provisionsEditor","legal_provisions_cited",brief.legal_provisions_cited || []);
+  renderEvidence(brief.supporting_evidence || []);
+}
+function integerOrNull(value) {
+  if (value === "") return null;
+  const parsed = Number.parseInt(value,10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+function rowValues(containerId, kind) {
+  return [...$(containerId).querySelectorAll(".field-card")].map(card => {
+    const values={};
+    for(const input of card.querySelectorAll("[data-field]")) {
+      const key=input.dataset.field;
+      if (input.type === "number") values[key]=integerOrNull(input.value);
+      else values[key]=input.value.trim() || null;
+    }
+    return {card, values};
+  }).filter(({values}) => Object.values(values).some(v => v !== null && v !== ""));
+}
+function collectChanges() {
+  const parties = rowValues("partiesEditor","parties").map(({values}) => ({
+    role: values.role || "other",
+    name: values.name,
+    source_quote: values.source_quote,
+    page_number: values.page_number
+  }));
+  const provisions = rowValues("provisionsEditor","legal_provisions_cited").map(({values}) => ({
+    act: values.act,
+    section: values.section,
+    source_quote: values.source_quote,
+    page_number: values.page_number
+  }));
+  const dates = rowValues("datesEditor","dates_and_periods").map(({card,values}) => {
+    const item = {
+      label: values.label || "Date / period",
+      original_text: values.original_text,
+      date_as_written_iso: values.date_as_written_iso,
+      duration_days_as_written: values.duration_days_as_written,
+      duration_from_as_written: values.duration_from_as_written,
+      page_number: values.page_number
+    };
+    let original = {};
+    try { original=JSON.parse(card.dataset.original || "{}"); } catch {}
+    const originalComparable = {
+      label: original.label || "Date / period",
+      original_text: original.original_text || null,
+      date_as_written_iso: original.date_as_written_iso || null,
+      duration_days_as_written: original.duration_days_as_written ?? null,
+      duration_from_as_written: original.duration_from_as_written || null,
+      page_number: original.page_number ?? null
+    };
+    // Keep the old calculation only if the editable source fields are unchanged.
+    item.preliminary_assessment = JSON.stringify(item) === JSON.stringify(originalComparable)
+      ? (original.preliminary_assessment ?? null)
+      : null;
+    return item;
+  });
+  return {
+    summary: $("summaryEdit").value.trim(),
+    parties,
+    demands_or_claims: $("demandsEdit").value.split("\n").map(v=>v.trim()).filter(Boolean),
+    dates_and_periods: dates,
+    legal_provisions_cited: provisions,
+    information_to_confirm: $("informationEdit").value.split("\n").map(v=>v.trim()).filter(Boolean)
+  };
+}
+
 function renderCase(item) {
   selectedCase=item;
   const b=item.brief || {};
   $("details").hidden=false; $("noCase").hidden=true;
   $("caseTitle").textContent=item.title;
-  $("caseMeta").textContent="Case "+item.case_id+" · Revision "+item.revision+" · Created "+new Date(item.created_at).toLocaleString();
+  $("caseMeta").textContent="Case "+item.case_id+" · Document: "+((b.document || {}).type || "unknown").replaceAll("_"," ")+" · Revision "+item.revision+" · Created "+new Date(item.created_at).toLocaleString();
   $("caseStatus").replaceChildren();
-  const pill=document.createElement("span");pill.className="status "+item.status;pill.textContent=statusLabel(item.status);
+  const pill=document.createElement("span");pill.className="status "+item.status;p illtext=statusLabel(item.status);
   $("caseStatus").appendChild(pill);
-  $("editor").value=JSON.stringify(editableFields(b),null,2);
+  renderFields(b);
   $("correctionNote").value="";
   $("decisionNote").value="";
   $("sourceChecked").checked=false;$("factsChecked").checked=false;$("deadlineChecked").checked=false;
@@ -114,13 +283,8 @@ function renderAudit(events) {
 }
 async function saveCorrections() {
   if(!selectedCase)return;
-  let changes;
-  try { changes=JSON.parse($("editor").value); }
-  catch { return feedback("message","The editor is not valid JSON."); }
-  if(!changes || typeof changes!=="object" || Array.isArray(changes))return feedback("message","The editor must contain a JSON object.");
-  const unknown=Object.keys(changes).filter(key=>!EDITABLE_FIELDS.includes(key));
-  if(unknown.length)return feedback("message","These fields cannot be edited: "+unknown.join(", "));
   try {
+    const changes=collectChanges();
     const result=await (await api("/review/cases/"+selectedCase.case_id+"/brief",{
       method:"PUT",body:JSON.stringify({changes,expected_revision:selectedCase.revision,note:$("correctionNote").value})
     })).json();
