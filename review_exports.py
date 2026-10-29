@@ -98,6 +98,12 @@ def _pdf_paragraph(value: Any, style: ParagraphStyle) -> Paragraph:
     return Paragraph(text, style)
 
 
+def _pdf_labeled(label: str, value: Any, style: ParagraphStyle) -> Paragraph:
+    safe_label = escape(label)
+    safe_value = escape(_text(value)).replace("\\n", "<br/>")
+    return Paragraph(f"<b>{safe_label}:</b> {safe_value}", style)
+
+
 def _items_for(brief: dict, key: str) -> list:
     value = brief.get(key)
     return value if isinstance(value, list) else []
@@ -139,7 +145,7 @@ def export_pdf(case: dict) -> bytes:
     ))
 
     story = [
-        Paragraph("Nyaya-Saathi — Lawyer Intake Brief", styles["NyayaTitle"]),
+        Paragraph("Nyaya-Saathi - Lawyer Intake Brief", styles["NyayaTitle"]),
         _pdf_paragraph(f"Status: {str(case.get('status', '')).replace('_', ' ').upper()}", styles["NyayaBody"]),
         _pdf_paragraph(f"Case ID: {case.get('case_id')}", styles["NyayaSmall"]),
         _pdf_paragraph(f"Revision: {case.get('revision')} · Updated: {case.get('updated_at')}", styles["NyayaSmall"]),
@@ -161,7 +167,7 @@ def export_pdf(case: dict) -> bytes:
             story.append(_pdf_paragraph("None recorded.", styles["NyayaBody"]))
             return
         for value in values:
-            story.append(_pdf_paragraph("• " + _text(value), styles["NyayaBody"]))
+            story.append(_pdf_paragraph("- " + _text(value), styles["NyayaBody"]))
 
     heading("Document")
     document = brief.get("document") or {}
@@ -170,7 +176,7 @@ def export_pdf(case: dict) -> bytes:
         ("notice_language", "Notice language"), ("issuing_authority", "Issuing authority"),
         ("case_number", "Case number"), ("readable", "Readable"),
     ]:
-        story.append(_pdf_paragraph(f"<b>{escape(label)}:</b> {escape(_text(document.get(key)))}", styles["NyayaBody"]))
+        story.append(_pdf_labeled(label, document.get(key), styles["NyayaBody"]))
 
     heading("Summary")
     story.append(_pdf_paragraph(brief.get("summary"), styles["NyayaBody"]))
@@ -210,7 +216,7 @@ def export_pdf(case: dict) -> bytes:
     for item in _items_for(brief, "dates_and_periods"):
         assessment = item.get("preliminary_assessment") or {}
         line = (
-            f"<b>{escape(_text(item.get('label')))}</b>: {escape(_text(item.get('original_text')))}"
+            f"{escape(_text(item.get('label')))}: {escape(_text(item.get('original_text')))}"
             f" · source page {escape(_text(item.get('page_number')))}"
             f" · calculated date: {escape(_text(assessment.get('due_date')))}"
             f" · status: {escape(_text(assessment.get('status')))}"
@@ -224,7 +230,7 @@ def export_pdf(case: dict) -> bytes:
     heading("Supporting evidence")
     for item in _items_for(brief, "supporting_evidence"):
         story.append(_pdf_paragraph(
-            f"<b>{escape(_text(item.get('field')))}:</b> “{escape(_text(item.get('quote')))}”"
+            f"{escape(_text(item.get('field')))}: \"{escape(_text(item.get('quote')))}\""
             f" · page {escape(_text(item.get('page_number')))}"
             f" · quote match: {escape(_text(item.get('quote_match_status')))}"
             f" · review status: {escape(_text(item.get('verification_status')))}",
