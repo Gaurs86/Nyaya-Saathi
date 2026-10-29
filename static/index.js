@@ -28,9 +28,9 @@ const I = {
     footer:"ಇದು ಕಾನೂನು ಮಾಹಿತಿ, ಕಾನೂನು ಸಲಹೆ ಅಲ್ಲ. ದಯವಿಟ್ಟು ವಕೀಲರು ಅಥವಾ ಕಾನೂನು ನೆರವು ಸ್ವಯಂಸೇವಕರಲ್ಲಿ ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ." }
 };
 const CONSENT = {
-  en: "Your notice is processed by Google Gemini's free service, which may use it to improve their products. We don't store it. Cover names and addresses if you prefer.",
-  hi: "आपका नोटिस Google Gemini की मुक्त सेवा द्वारा संसाधित किया जाएगा, जो अपने उत्पादों को बेहतर बनाने के लिए इसका उपयोग कर सकता है। हम इसे संग्रहीत नहीं करते। यदि आप चाहें तो नाम और पते ढक दें।",
-  kn: "ನಿಮ್ಮ ನೋಟೀಸ್ ಅನ್ನು ಗೂಗಲ್ ಜೆಮಿನಿ ಉಚಿತ ಸೇವೆ ಮೂಲಕ ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತದೆ, ಅದು ಅವರ ಉತ್ಪನ್ನಗಳನ್ನು ಸುಧಾರಿಸಲು ಇದನ್ನು ಉಪಯೋಗಿಸಬಹುದು. ನಾವು ಇದನ್ನು ಸಂಗ್ರಹಿಸುವುದಿಲ್ಲ. ನೀವು ಇಚ್ಛಿಸಿದರೆ ಹೆಸರು ಮತ್ತು ವಿಳಾಸಗಳನ್ನು ಮುಚ್ಚಿ."
+  en: "Your notice is sent to Google Gemini for extraction; review your API plan's data terms before sharing sensitive information. We do not store the uploaded file. If you choose 'Save to lawyer review workspace', the extracted brief and review metadata are stored on this server. Redact names and addresses when possible.",
+  hi: "आपका नोटिस जानकारी निकालने के लिए Google Gemini को भेजा जाता है; संवेदनशील जानकारी साझा करने से पहले अपने API प्लान की डेटा शर्तें जाँचें। ऐप अपलोड की गई फ़ाइल को स्टोर नहीं करता। यदि आप 'वकील समीक्षा कार्यक्षेत्र में सहेजें' चुनते हैं, तो निकाला गया सारांश और समीक्षा मेटाडेटा सर्वर पर सहेजे जाएंगे। संभव हो तो नाम और पते छिपाएँ।",
+  kn: "ನಿಮ್ಮ ನೋಟಿಸ್‌ನ ಮಾಹಿತಿಯನ್ನು ಹೊರತೆಗೆದುಕೊಳ್ಳಲು ಅದನ್ನು Google Gemini ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ; ಸೂಕ್ಷ್ಮ ಮಾಹಿತಿಯನ್ನು ಹಂಚುವ ಮೊದಲು ನಿಮ್ಮ API ಯೋಜನೆಯ ಡೇಟಾ ನಿಯಮಗಳನ್ನು ಪರಿಶೀಲಿಸಿ. ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಮೂಲ ಫೈಲ್ ಅನ್ನು ಅಪ್ಲಿಕೇಶನ್ ಸಂಗ್ರಹಿಸುವುದಿಲ್ಲ. 'ವಕೀಲರ ಪರಿಶೀಲನಾ ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ಉಳಿಸಿ' ಆಯ್ಕೆ ಮಾಡಿದರೆ, ಹೊರತೆಗೆದ ಸಾರಾಂಶ ಮತ್ತು ಪರಿಶೀಲನಾ ಮೆಟಾಡೇಟಾ ಸರ್ವರ್‌ನಲ್ಲಿ ಉಳಿಯುತ್ತವೆ. ಸಾಧ್ಯವಾದರೆ ಹೆಸರು ಮತ್ತು ವಿಳಾಸಗಳನ್ನು ಮರೆಮಾಡಿ."
 };
 const GUIDE = {
   en: "If this is about domestic violence, arrest, or a child, please contact NALSA 15100 or your district DLSA.",
