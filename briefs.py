@@ -31,11 +31,11 @@ def _normalise_quote(value: str) -> str:
 
 
 def _quote_status(quote: str, page_number: int | None, source_text_by_page: dict[int, str]) -> str:
-    if not source_text_by_page:
+    if not source_text_by_page or not any(str(text or "").strip() for text in source_text_by_page.values()):
         return "not_verifiable"
     if page_number is not None:
         source = source_text_by_page.get(page_number)
-        if source is None:
+        if source is None or not str(source).strip():
             return "page_text_unavailable"
         return "matched_in_source_text" if _normalise_quote(quote) in _normalise_quote(source) else "not_found_in_source_text"
     for source in source_text_by_page.values():
