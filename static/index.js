@@ -282,6 +282,15 @@ $("lang").onchange = e => { lang = e.target.value; applyLang(); };
 function setView(view) {
   const views = ["dashboard", "upload", "reports", "resources"];
   if (!views.includes(view)) view = "dashboard";
+  if (view === "upload" && currentView !== "upload" && $("out") && !$("out").hidden) {
+    files = [];
+    renderThumbs();
+    $("rd").value = "";
+    $("out").hidden = true;
+    $("up").hidden = false;
+    $("chat").replaceChildren();
+    $("fb").hidden = true;
+  }
   currentView = view;
   for (const name of views) $(name + "View").hidden = name !== view;
   document.querySelectorAll("[data-view]").forEach(el => {
@@ -300,6 +309,7 @@ document.querySelectorAll("[data-view]").forEach(el => el.addEventListener("clic
 }));
 $("startAnalysis").onclick = () => setView("upload");
 $("agree").onclick = () => {
+  try { sessionStorage.setItem("nyayaSaathiConsent", "accepted"); } catch (e) {}
   $("consent").hidden = true;
   $("app").hidden = false;
   const requested = new URLSearchParams(window.location.search).get("view") || "dashboard";
@@ -467,3 +477,12 @@ $("again").onclick = () => {
 };
 
 applyLang();
+try {
+  if (sessionStorage.getItem("nyayaSaathiConsent") === "accepted") {
+    $("consent").hidden = true;
+    $("app").hidden = false;
+    const requested = new URLSearchParams(window.location.search).get("view") || "dashboard";
+    setView(requested);
+    loadDistricts();
+  }
+} catch (e) {}
