@@ -73,6 +73,7 @@ def _pdf_font(language: str, text: str) -> str:
     name = "NyayaReviewUnicode"
     if name not in pdfmetrics.getRegisteredFontNames():
         pdfmetrics.registerFont(TTFont(name, font_path))
+    pdfmetrics.registerFontFamily(name, normal=name, bold=name, italic=name, boldItalic=name)
     return name
 
 
@@ -100,7 +101,7 @@ def _pdf_paragraph(value: Any, style: ParagraphStyle) -> Paragraph:
 
 def _pdf_labeled(label: str, value: Any, style: ParagraphStyle) -> Paragraph:
     safe_label = escape(label)
-    safe_value = escape(_text(value)).replace("\\n", "<br/>")
+    safe_value = escape(_text(value)).replace("\n", "<br/>")
     return Paragraph(f"<b>{safe_label}:</b> {safe_value}", style)
 
 
