@@ -8,3 +8,8 @@ nyaya-saathi/data/events.jsonl
 .codenow/
 files*
 .nyaya_saathi/
+# Local synthetic evaluation PDFs, output briefs (may contain client data), and reports.
+evals/actual/
+evals/generated/
+evals/reports/
+evals/report.json
