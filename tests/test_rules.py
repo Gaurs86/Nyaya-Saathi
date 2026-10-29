@@ -113,4 +113,11 @@ def test_not_enough_information():
 def test_unknown_district():
     r = find_center('UnknownDistrict')
     assert r['found'] is False
-    assert 'nalasa_helpline' in r
+    assert 'nalsa_helpline' in r
+
+
+def test_placeholder_dlsa_contact_is_not_returned_as_verified():
+    r = find_center('Bengaluru Urban')
+    assert r['found'] is False
+    assert r['entries'] == []
+    assert r['nalsa_helpline']['phone'] == '15100'
