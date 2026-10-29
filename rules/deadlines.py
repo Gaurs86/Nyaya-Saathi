@@ -53,14 +53,19 @@ def _item(
 ) -> Dict:
     days_left = (due_dt - today_dt).days if due_dt and today_dt else None
     known = due_dt is not None and days_left is not None
+    if known and informational:
+        urgent_value, overdue_value = False, False
+    elif known and calculate_urgency:
+        urgent_value = 0 <= days_left <= URGENT_DAYS
+        overdue_value = days_left < 0
+    else:
+        urgent_value, overdue_value = None, None
     return {
         "label": label,
         "due_date": due_dt.strftime("%Y-%m-%d") if due_dt else None,
         "days_left": days_left,
-        "urgent": (0 <= days_left <= URGENT_DAYS and not informational)
-                  if known and calculate_urgency else None,
-        "overdue": (days_left < 0 and not informational)
-                   if known and calculate_urgency else None,
+        "urgent": urgent_value,
+        "overdue": overdue_value,
         "assumed": assumed,
         "informational": informational,
         "basis": basis,
@@ -198,6 +203,10 @@ def compute_deadlines(
             )
             item["legal_rule_verified"] = True
             item["calculation_status"] = "computed_from_lawyer_reviewed_rule"
+            if item.get("due_date") and item.get("days_left") is not None:
+                days_left = item["days_left"]
+                item["urgent"] = 0 <= days_left <= URGENT_DAYS
+                item["overdue"] = days_left < 0
             result.append(item)
 
     return result
