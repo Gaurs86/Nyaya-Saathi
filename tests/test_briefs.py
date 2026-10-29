@@ -73,3 +73,25 @@ def test_brief_does_not_claim_due_date_is_verified():
     assert assessment["due_date"] == "2026-11-15"
     assert assessment["status"] == "requires_lawyer_verification"
     assert assessment["legal_rule_verified"] is None
+
+
+def test_pdf_quote_match_is_recorded_but_still_requires_human_review():
+    brief = build_lawyer_brief(
+        sample_extraction(),
+        [],
+        source_text_by_page={1: "You are called upon to pay the outstanding rent."},
+    )
+    span = brief["supporting_evidence"][0]
+    assert span["quote_match_status"] == "matched_in_source_text"
+    assert span["verification_status"] == "requires_human_review"
+
+
+def test_quote_not_found_in_pdf_text_is_flagged():
+    brief = build_lawyer_brief(
+        sample_extraction(),
+        [],
+        source_text_by_page={1: "Unrelated text from the PDF."},
+    )
+    span = brief["supporting_evidence"][0]
+    assert span["quote_match_status"] == "not_found_in_source_text"
+    assert any("not found" in item for item in brief["information_to_confirm"])
