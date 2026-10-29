@@ -25,10 +25,10 @@ def _perfect_brief(case):
             "type": expected["document_type"],
             "readable": expected["readable"],
         },
-        "parties": expected.get("parties", []),
+        "parties": [dict(item) for item in expected.get("parties", [])],
         "dates_and_periods": dates,
-        "legal_provisions_cited": expected.get("provisions", []),
-        "demands_or_claims": expected.get("demand_phrases", []),
+        "legal_provisions_cited": [dict(item) for item in expected.get("provisions", [])],
+        "demands_or_claims": list(expected.get("demand_phrases", [])),
         "supporting_evidence": evidence,
     }
 
