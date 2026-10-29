@@ -329,7 +329,7 @@ $("saveToWorkspace").onclick = async () => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "Could not save to review workspace.");
     const openNow = confirm("Saved as case " + data.case_id + ". Open the lawyer review workspace now?");
-    if (openNow) window.open("/review?case_id=" + encodeURIComponent(data.case_id), "_blank", "noopener");
+    if (openNow) window.location.href = "/review?case_id=" + encodeURIComponent(data.case_id);
   } catch (error) {
     showErr(I[lang].err + (error.message ? " (" + error.message + ")" : ""));
   }
