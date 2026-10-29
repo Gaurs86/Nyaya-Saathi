@@ -238,6 +238,16 @@ def export_pdf(case: dict) -> bytes:
             styles["NyayaBody"],
         ))
 
+    heading("Reviewer corrections")
+    corrections = _items_for(brief, "reviewer_corrections")
+    if not corrections:
+        story.append(_pdf_paragraph("No reviewer corrections recorded.", styles["NyayaBody"]))
+    for correction in corrections:
+        story.append(_pdf_paragraph(
+            f"Revision {escape(_text(correction.get('revision')))} | reviewer {escape(_text(correction.get('reviewer_label')))} | fields: {escape(_text(correction.get('fields')))} | note: {escape(_text(correction.get('note')))}",
+            styles["NyayaBody"],
+        ))
+
     heading("Urgency flags")
     bullets(_items_for(brief, "urgency_flags"))
     heading("Information to confirm")
@@ -331,6 +341,7 @@ def export_docx(case: dict) -> bytes:
     document.add_heading("Supporting evidence", level=1)
     for item in _items_for(brief, "supporting_evidence"):
         add_field(_text(item.get("field")), f'“{_text(item.get("quote"))}” (page {_text(item.get("page_number"))}; quote match: {_text(item.get("quote_match_status"))}; {_text(item.get("verification_status"))})')
+    add_list("Reviewer corrections", _items_for(brief, "reviewer_corrections"))
     add_list("Urgency flags", _items_for(brief, "urgency_flags"))
     add_list("Information to confirm", _items_for(brief, "information_to_confirm"))
     add_list("Lawyer review checklist", _items_for(brief, "lawyer_review_checklist"))
