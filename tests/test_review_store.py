@@ -125,3 +125,38 @@ def test_shared_token_uses_constant_time_comparison(monkeypatch):
     monkeypatch.setenv("REVIEWER_API_TOKEN", "example-secret")
     assert review_store.reviewer_token_matches("example-secret") is True
     assert review_store.reviewer_token_matches("wrong") is False
+
+
+def test_correcting_date_fields_invalidates_old_calculation(db):
+    sample = sample_brief()
+    sample["dates_and_periods"] = [{
+        "label": "payment period",
+        "original_text": "within 15 days",
+        "date_as_written_iso": None,
+        "duration_days_as_written": 15,
+        "duration_from_as_written": "receipt",
+        "page_number": 1,
+        "preliminary_assessment": {
+            "due_date": "2026-11-15",
+            "status": "requires_lawyer_verification",
+            "basis": "Old provisional calculation",
+        },
+    }]
+    case = review_store.create_case(sample)
+    corrected = review_store.update_brief(
+        case["case_id"],
+        {"dates_and_periods": [{
+            "label": "payment period",
+            "original_text": "within 20 days",
+            "date_as_written_iso": None,
+            "duration_days_as_written": 20,
+            "duration_from_as_written": "receipt",
+            "page_number": 1,
+            "preliminary_assessment": None,
+        }]},
+        expected_revision=1,
+    )
+    assessment = corrected["brief"]["dates_and_periods"][0]["preliminary_assessment"]
+    assert assessment["due_date"] is None
+    assert assessment["status"] == "requires_lawyer_verification"
+    assert "Previous calculation invalidated" in assessment["basis"]
