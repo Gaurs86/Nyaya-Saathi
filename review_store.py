@@ -234,6 +234,26 @@ def update_brief(
         changed_fields = [key for key in changes if previous.get(key) != updated.get(key)]
         if not changed_fields:
             return _case_from_row(row)
+        if "dates_and_periods" in changed_fields:
+            # A changed trigger/date must never retain a stale calculated date.
+            # We do not automatically recalculate legal deadlines in the review UI.
+            reset_assessment = {
+                "due_date": None,
+                "days_left": None,
+                "basis": "Date/period fields were corrected during review. Previous calculation invalidated; no new legal deadline has been calculated.",
+                "assumed": False,
+                "informational": False,
+                "legal_rule_verified": None,
+                "status": "requires_lawyer_verification",
+            }
+            safe_dates = []
+            for entry in updated.get("dates_and_periods") or []:
+                if not isinstance(entry, dict):
+                    continue
+                safe_entry = dict(entry)
+                safe_entry["preliminary_assessment"] = dict(reset_assessment)
+                safe_dates.append(safe_entry)
+            updated["dates_and_periods"] = safe_dates
         # A correction invalidates the current approval; require a fresh review.
         updated["review_status"] = "draft_pending_lawyer_review"
         updated.pop("reviewer_approval", None)
