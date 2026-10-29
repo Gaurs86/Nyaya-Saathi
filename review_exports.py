@@ -284,7 +284,8 @@ def export_docx(case: dict) -> bytes:
     normal.font.size = Pt(9)
 
     document.add_heading("Nyaya-Saathi - Lawyer Intake Brief", 0)
-    document.add_paragraph(f"Matter title: {case.get('title')}")\n    document.add_paragraph(f"Status: {str(case.get('status', '')).replace('_', ' ').upper()}")
+    document.add_paragraph(f"Matter title: {case.get('title')}")
+    document.add_paragraph(f"Status: {str(case.get('status', '')).replace('_', ' ').upper()}")
     document.add_paragraph(f"Case ID: {case.get('case_id')} | Revision: {case.get('revision')} | Updated: {case.get('updated_at')}")
     approval = brief.get("reviewer_approval") or {}
     if case.get("status") == "approved":
