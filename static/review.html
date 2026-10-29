@@ -192,7 +192,7 @@ function renderCase(item) {
   $("caseTitle").textContent=item.title;
   $("caseMeta").textContent="Case "+item.case_id+" · Revision "+item.revision+" · Created "+new Date(item.created_at).toLocaleString();
   $("caseStatus").replaceChildren();
-  const pill=document.createElement("span");pill.className="status "+item.status;p illtext=statusLabel(item.status);
+  const pill=document.createElement("span");pill.className="status "+item.status;pill.textContent=statusLabel(item.status);
   $("caseStatus").appendChild(pill);
   $("editor").value=JSON.stringify(editableFields(b),null,2);
   $("correctionNote").value="";
