@@ -111,6 +111,7 @@ function makeField(spec, value) {
 
 function addRow(containerId, kind, item={}) {
   const container = $(containerId);
+  container.querySelectorAll(".empty-list-message").forEach(node => node.remove());
   const card = document.createElement("div");
   card.className = "field-card";
   card.dataset.kind = kind;
@@ -145,7 +146,7 @@ function addRow(containerId, kind, item={}) {
 function renderRows(containerId, kind, items) {
   const container = $(containerId); container.replaceChildren();
   if (!items || items.length === 0) {
-    const p=document.createElement("p");p.className="muted";p.textContent="No entries extracted. Add one if the source document supports it.";
+    const p=document.createElement("p");p.className="muted empty-list-message";p.textContent="No entries extracted. Add one if the source document supports it.";
     container.appendChild(p);
     return;
   }
@@ -246,7 +247,7 @@ function renderCase(item) {
   $("caseTitle").textContent=item.title;
   $("caseMeta").textContent="Case "+item.case_id+" · Document: "+((b.document || {}).type || "unknown").replaceAll("_"," ")+" · Revision "+item.revision+" · Created "+new Date(item.created_at).toLocaleString();
   $("caseStatus").replaceChildren();
-  const pill=document.createElement("span");pill.className="status "+item.status;p illtext=statusLabel(item.status);
+  const pill=document.createElement("span");pill.className="status "+item.status;pill.textContent=statusLabel(item.status);
   $("caseStatus").appendChild(pill);
   renderFields(b);
   $("correctionNote").value="";
@@ -334,6 +335,9 @@ async function deleteCase() {
     await refreshQueue();feedback("message","Deleted case "+old+".","success");
   } catch(err) {feedback("message",err.message);}
 }
+$("addParty").onclick=()=>addRow("partiesEditor","parties",{role:"other"});
+$("addDate").onclick=()=>addRow("datesEditor","dates_and_periods",{label:"",original_text:""});
+$("addProvision").onclick=()=>addRow("provisionsEditor","legal_provisions_cited",{act:"",section:""});
 $("connect").onclick=connect;
 $("refresh").onclick=()=>refreshQueue().catch(err=>feedback("message",err.message));
 $("statusFilter").onchange=()=>refreshQueue().catch(err=>feedback("message",err.message));
