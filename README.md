@@ -74,6 +74,11 @@ python test_pipeline.py path/to/notice.jpg
 | Path | Purpose |
 |---|---|
 | `app.py` | FastAPI app, upload validation, session handling, API endpoints |
+| `review_store.py` | SQLite review queue, corrections, decisions, revisions and audit events |
+| `review_exports.py` | Reviewed PDF and DOCX export generation |
+| `uploads.py` | Upload signature, count and size validation |
+| `static/review.html`, `static/review.js` | Token-gated lawyer review queue and detail workspace |
+| `static/index.js` | Frontend interactions, including optional save-to-review action |
 | `pipeline.py` | Gemini structured extraction, page-aware facts and evidence pointers |
 | `briefs.py` | Structured lawyer-intake draft and evidence status |
 | `uploads.py` | Server-side file signature and size validation |
