@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nyaya-Saathi — Lawyer Review Workspace</title>
+<style>
+:root{--ink:#243342;--muted:#607080;--bg:#f2f5f7;--paper:#fff;--line:#d5dde4;--brand:#176b5b;--pale:#e8f3f0;--amber:#8b5e00;--amberbg:#fff4d6;--red:#9b2c2c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#123d36;color:white;padding:22px max(20px,calc((100vw - 1200px)/2));display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header h1{font-size:1.35rem;margin:0}header p{margin:3px 0 0;color:#d1e6e0;font-size:.92rem}
+a{color:var(--brand)}main{max-width:1200px;margin:24px auto;padding:0 18px 50px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #2433420a}
+h2{font-size:1.12rem;margin:0 0 12px}h3{font-size:1rem;margin:18px 0 8px}
+label{font-weight:650;font-size:.91rem;display:block;margin-bottom:5px}
+input,textarea,select{font:inherit;color:inherit;background:white;border:1px solid #aab6c2;border-radius:8px;padding:10px;width:100%}
+textarea{min-height:320px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;tab-size:2}
+button,.button{border:1px solid var(--brand);border-radius:9px;background:var(--brand);color:white;font:inherit;font-weight:650;padding:9px 13px;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;gap:7px}
+button.secondary,.button.secondary{background:white;color:var(--brand)}button.danger{background:var(--red);border-color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+.fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.muted{color:var(--muted);font-size:.9rem}.notice{background:var(--amberbg);border:1px solid #e4c56d;border-radius:10px;padding:12px;margin:10px 0;font-size:.9rem}
+.error{background:#fce8e6;border:1px solid #e8b1ac;color:#8a2222;padding:10px;border-radius:8px;margin:10px 0;white-space:pre-wrap}
+.success{background:var(--pale);border:1px solid #a4d6c7;color:#125649;padding:10px;border-radius:8px;margin:10px 0}
+.case-list{display:grid;gap:8px}.case-item{display:block;text-align:left;background:white;color:var(--ink);border:1px solid var(--line);width:100%;padding:12px;border-radius:10px}.case-item.active{border:2px solid var(--brand);background:var(--pale)}
+.case-item strong{display:block;overflow-wrap:anywhere}.status{display:inline-block;padding:2px 8px;border-radius:20px;background:#e8edf1;color:#384b5b;font-size:.75rem;margin-top:5px}.status.approved{background:#d6f3e7;color:#126344}.status.rejected{background:#ffe1df;color:#8a2525}.status.changes_requested{background:#fff0cc;color:#795100}
+.checks{display:grid;gap:8px}.check{display:flex;align-items:flex-start;gap:8px;font-weight:500}.check input{width:auto;margin-top:5px}.audit{padding:10px 0;border-top:1px solid var(--line)}.audit:first-child{border-top:0}
+.smallcaps{text-transform:uppercase;letter-spacing:.05em;font-size:.76rem;color:var(--muted);font-weight:700}.empty{padding:25px 12px;text-align:center;color:var(--muted)}.toplinks{display:flex;gap:12px;flex-wrap:wrap}#workspace[hidden],#details[hidden]{display:none}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.fieldrow{grid-template-columns:1fr}header{padding:18px}}@media print{header,#auth,#queue,.noprint{display:none!important}body{background:white}main{max-width:none;margin:0;padding:0}.panel{box-shadow:none;border:0;padding:0}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Nyaya-Saathi · Lawyer Review Workspace</h1><p>Correct the intake brief, record a review decision, and export an approved version.</p></div>
+  <nav class="toplinks"><a href="/" style="color:white">Notice explainer</a><a href="https://github.com/Gaurs86/Nyaya-Saathi" style="color:white">GitHub</a></nav>
+</header>
+<main>
+  <section class="panel" id="auth">
+    <h2>Connect to review workspace</h2>
+    <p class="muted">The reviewer token is held in this page's memory only and is not saved in browser storage. The reviewer label is self-reported, not a verified identity.</p>
+    <div class="fieldrow">
+      <div><label for="token">Workspace token</label><input id="token" type="password" autocomplete="off" placeholder="REVIEWER_API_TOKEN"></div>
+      <div><label for="reviewer">Reviewer label</label><input id="reviewer" maxlength="80" placeholder="e.g. Advocate / reviewer initials"></div>
+    </div>
+    <div class="actions"><button id="connect">Connect and load queue</button></div>
+    <div id="authMessage" aria-live="polite"></div>
+  </section>
+
+  <section id="workspace" hidden>
+    <div class="grid">
+      <aside class="panel" id="queue">
+        <h2>Review queue</h2>
+        <label for="statusFilter">Filter status</label>
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="pending_review">Pending review</option>
+          <option value="changes_requested">Changes requested</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <div class="actions"><button class="secondary" id="refresh">Refresh</button></div>
+        <p class="muted" id="queueCount"></p>
+        <div class="case-list" id="caseList"><div class="empty">No cases loaded.</div></div>
+        <div class="notice">Only extracted brief data is stored by this workspace; the original notice is not stored here. Keep the original source available for review.</div>
+      </aside>
+      <section>
+        <div class="panel" id="details" hidden>
+          <div class="smallcaps">Selected matter</div>
+          <h2 id="caseTitle"></h2>
+          <p class="muted" id="caseMeta"></p>
+          <p id="caseStatus"></p>
+          <div class="notice"><strong>Review boundary:</strong> Approval means the reviewer has checked the draft for their workflow. It is not a guarantee of legal validity and does not replace professional judgment.</div>
+
+          <h3>Editable brief fields</h3>
+          <p class="muted">Edit the JSON below. Only the listed fields are accepted. Saving corrections increments the revision and resets an existing approval.</p>
+          <textarea id="editor" spellcheck="false" aria-label="Editable intake brief fields"></textarea>
+          <label for="correctionNote">Correction note (optional)</label>
+          <input id="correctionNote" maxlength="2000" placeholder="Why were these fields changed?">
+          <div class="actions"><button id="saveChanges">Save corrections</button><button class="secondary" id="reloadCase">Discard local edits / reload</button></div>
+
+          <h3>Review decision</h3>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="sourceChecked"> I checked the original source document and relevant passages.</label>
+            <label class="check"><input type="checkbox" id="factsChecked"> I checked extracted parties, demands, amounts and dates against the source.</label>
+            <label class="check"><input type="checkbox" id="deadlineChecked"> I reviewed date triggers and deadline language, or confirmed that no legal deadline is being asserted.</label>
+          </div>
+          <label for="decisionNote" style="margin-top:12px">Review note / changes requested</label>
+          <textarea id="decisionNote" style="min-height:90px;font:inherit" maxlength="2000" placeholder="Record corrections needed or the review context."></textarea>
+          <div class="actions">
+            <button id="approve">Approve brief</button>
+            <button class="secondary" id="requestChanges">Request changes</button>
+            <button class="danger" id="reject">Reject intake</button>
+          </div>
+
+          <h3>Export</h3>
+          <p class="muted">PDF and DOCX downloads are enabled only after approval. Exported files include the current case ID and review status.</p>
+          <div class="actions">
+            <button class="secondary" id="exportPdf" disabled>Download reviewed PDF</button>
+            <button class="secondary" id="exportDocx" disabled>Download reviewed DOCX</button>
+          </div>
+
+          <h3>Audit history</h3>
+          <div id="audit"><p class="muted">Loading audit events…</p></div>
+          <h3>Danger zone</h3>
+          <p class="muted">Deleting a case permanently removes its brief and associated audit history from this prototype database.</p>
+          <button class="danger" id="deleteCase">Permanently delete case</button>
+        </div>
+        <div class="panel empty" id="noCase">Connect and select a case from the queue. If you've just saved a brief, use the case ID included in the URL.</div>
+        <div id="message" aria-live="polite"></div>
+      </section>
+    </div>
+  </section>
+  <p class="muted">Prototype warning: this workspace uses one shared server token and a local SQLite database. It is not a multi-tenant or production-grade identity/audit system. Do not deploy it for real client documents until individual authentication, access control, retention, and encrypted storage are in place.</p>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let token = "", reviewer = "", selectedCase = null, cases = [];
+const EDITABLE_FIELDS = ["summary","parties","demands_or_claims","dates_and_periods","legal_provisions_cited","information_to_confirm"];
+
+function feedback(target, message, kind="error") {
+  $(target).innerHTML = "";
+  if (!message) return;
+  const node = document.createElement("div");
+  node.className = kind;
+  node.textContent = message;
+  $(target).appendChild(node);
+}
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+async function api(path, options={}) {
+  const headers = new Headers(options.headers || {});
+  headers.set("X-Reviewer-Token", token);
+  headers.set("X-Reviewer-Label", reviewer || "reviewer");
+  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type","application/json");
+  const response = await fetch(path, {...options, headers});
+  if (!response.ok) {
+    let detail = "Request failed (" + response.status + ").";
+    try { detail = (await response.json()).detail || detail; } catch {}
+    throw new Error(detail);
+  }
+  return response;
+}
+function statusLabel(status) { return String(status || "").replaceAll("_"," "); }
+async function connect() {
+  token = $("token").value.trim();
+  reviewer = $("reviewer").value.trim() || "reviewer";
+  if (!token) return feedback("authMessage","Enter the workspace token.");
+  try {
+    await refreshQueue();
+    $("workspace").hidden = false;
+    feedback("authMessage","Connected. Token remains only in this page's memory.","success");
+    const caseId = new URLSearchParams(location.search).get("case_id");
+    if (caseId) await openCase(caseId);
+  } catch (err) {
+    token = "";
+    feedback("authMessage",err.message);
+  }
+}
+async function refreshQueue() {
+  const filter = $("statusFilter").value;
+  const path = "/review/cases" + (filter ? "?status=" + encodeURIComponent(filter) : "");
+  const data = await (await api(path)).json();
+  cases = data.cases || [];
+  $("queueCount").textContent = cases.length + " case(s)";
+  const list = $("caseList"); list.replaceChildren();
+  if (!cases.length) {
+    const empty = document.createElement("div"); empty.className="empty"; empty.textContent="No cases in this queue."; list.appendChild(empty); return;
+  }
+  for (const item of cases) {
+    const button=document.createElement("button"); button.type="button";
+    button.className="case-item" + (selectedCase && selectedCase.case_id===item.case_id ? " active" : "");
+    const title=document.createElement("strong"); title.textContent=item.title;
+    const type=document.createElement("span"); type.className="muted"; type.textContent=(item.doc_type || "unknown").replaceAll("_"," ");
+    const status=document.createElement("span"); status.className="status "+item.status; status.textContent=statusLabel(item.status);
+    const meta=document.createElement("div"); meta.className="muted"; meta.textContent="Rev "+item.revision+" · "+new Date(item.updated_at).toLocaleString();
+    button.append(title,type,status,meta); button.onclick=()=>openCase(item.case_id); list.appendChild(button);
+  }
+}
+function editableFields(brief) {
+  const result={};
+  for(const field of EDITABLE_FIELDS) {
+    if (field in brief) result[field]=brief[field];
+    else result[field] = field==="summary" ? "" : [];
+  }
+  return result;
+}
+function renderCase(item) {
+  selectedCase=item;
+  const b=item.brief || {};
+  $("details").hidden=false; $("noCase").hidden=true;
+  $("caseTitle").textContent=item.title;
+  $("caseMeta").textContent="Case "+item.case_id+" · Revision "+item.revision+" · Created "+new Date(item.created_at).toLocaleString();
+  $("caseStatus").replaceChildren();
+  const pill=document.createElement("span");pill.className="status "+item.status;p illtext=statusLabel(item.status);
+  $("caseStatus").appendChild(pill);
+  $("editor").value=JSON.stringify(editableFields(b),null,2);
+  $("correctionNote").value="";
+  $("decisionNote").value="";
+  $("sourceChecked").checked=false;$("factsChecked").checked=false;$("deadlineChecked").checked=false;
+  const approved=item.status==="approved";
+  $("exportPdf").disabled=!approved;$("exportDocx").disabled=!approved;
+  feedback("message","");
+  renderAudit([]);
+}
+async function openCase(id) {
+  try {
+    const item=await (await api("/review/cases/"+encodeURIComponent(id))).json();
+    renderCase(item);
+    await loadAudit();
+    await refreshQueue();
+  } catch(err) { feedback("message",err.message); }
+}
+async function loadAudit() {
+  if(!selectedCase)return;
+  const data=await (await api("/review/cases/"+encodeURIComponent(selectedCase.case_id)+"/events")).json();
+  renderAudit(data.events || []);
+}
+function renderAudit(events) {
+  const target=$("audit");target.replaceChildren();
+  if(!events.length) { const p=document.createElement("p");p.className="muted";p.textContent="No audit events loaded.";target.appendChild(p);return; }
+  for(const event of events) {
+    const div=document.createElement("div");div.className="audit";
+    const strong=document.createElement("strong");strong.textContent=event.action.replaceAll("_"," ");
+    const meta=document.createElement("div");meta.className="muted";meta.textContent=event.actor_label+" · "+new Date(event.event_at).toLocaleString();
+    const detail=document.createElement("pre");detail.style.whiteSpace="pre-wrap";detail.style.fontSize="12px";detail.textContent=JSON.stringify(event.details,null,2);
+    div.append(strong,meta,detail);target.appendChild(div);
+  }
+}
+async function saveCorrections() {
+  if(!selectedCase)return;
+  let changes;
+  try { changes=JSON.parse($("editor").value); }
+  catch { return feedback("message","The editor is not valid JSON."); }
+  if(!changes || typeof changes!=="object" || Array.isArray(changes))return feedback("message","The editor must contain a JSON object.");
+  const unknown=Object.keys(changes).filter(key=>!EDITABLE_FIELDS.includes(key));
+  if(unknown.length)return feedback("message","These fields cannot be edited: "+unknown.join(", "));
+  try {
+    const result=await (await api("/review/cases/"+selectedCase.case_id+"/brief",{
+      method:"PUT",body:JSON.stringify({changes,expected_revision:selectedCase.revision,note:$("correctionNote").value})
+    })).json();
+    renderCase(result); await loadAudit(); await refreshQueue();
+    feedback("message","Corrections saved. The brief returned to pending review; approval is required again.","success");
+  } catch(err) {feedback("message",err.message);}
+}
+async function decide(decision) {
+  if(!selectedCase)return;
+  const note=$("decisionNote").value.trim();
+  const confirmations={
+    source_checked:$("sourceChecked").checked,
+    facts_checked:$("factsChecked").checked,
+    deadline_reviewed:$("deadlineChecked").checked
+  };
+  if(decision==="approved" && !Object.values(confirmations).every(Boolean)) {
+    return feedback("message","Check all three review confirmations before approving.");
+  }
+  if(decision==="changes_requested" && !note) {
+    return feedback("message","Add a note explaining which changes are needed.");
+  }
+  if(!confirm("Record decision: "+statusLabel(decision)+"? This action will be added to the case audit history."))return;
+  try {
+    const result=await (await api("/review/cases/"+selectedCase.case_id+"/decision",{
+      method:"POST",body:JSON.stringify({decision,expected_revision:selectedCase.revision,note,confirmations})
+    })).json();
+    renderCase(result); await loadAudit(); await refreshQueue();
+    feedback("message","Decision recorded: "+statusLabel(result.status)+".","success");
+  } catch(err) {feedback("message",err.message);}
+}
+async function exportFile(format) {
+  if(!selectedCase || selectedCase.status!=="approved")return;
+  try {
+    const response=await api("/review/cases/"+selectedCase.case_id+"/export?format="+format);
+    const blob=await response.blob();const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;
+    a.download="nyaya-saathi-"+selectedCase.case_id.slice(0,12)+"-reviewed."+format;
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  } catch(err) {feedback("message",err.message);}
+}
+async function deleteCase() {
+  if(!selectedCase)return;
+  if(!confirm("Permanently delete this case and its audit history? This cannot be undone."))return;
+  try {
+    await api("/review/cases/"+selectedCase.case_id+"?confirm=true",{method:"DELETE"});
+    const old=selectedCase.case_id;selectedCase=null;$("details").hidden=true;$("noCase").hidden=false;
+    await refreshQueue();feedback("message","Deleted case "+old+".","success");
+  } catch(err) {feedback("message",err.message);}
+}
+$("connect").onclick=connect;
+$("refresh").onclick=()=>refreshQueue().catch(err=>feedback("message",err.message));
+$("statusFilter").onchange=()=>refreshQueue().catch(err=>feedback("message",err.message));
+$("saveChanges").onclick=saveCorrections;
+$("reloadCase").onclick=()=>selectedCase && openCase(selectedCase.case_id);
+$("approve").onclick=()=>decide("approved");
+$("requestChanges").onclick=()=>decide("changes_requested");
+$("reject").onclick=()=>decide("rejected");
+$("exportPdf").onclick=()=>exportFile("pdf");
+$("exportDocx").onclick=()=>exportFile("docx");
+$("deleteCase").onclick=deleteCase;
+</script>
+</body>
+</html>
