@@ -67,7 +67,7 @@ def test_court_summons_written_statement_counts_from_receipt():
     hearing = {'label': 'hearing date', 'date': '2026-12-01', 'original_text': '1 Dec 2026'}
     res = compute_deadlines('court_summons', [hearing], None, '2026-10-29')
     assert not by_label(res, 'appear on hearing date')      # no made-up deadline equal to the notice date
-    assert by_label(res, 'written statement')[0]['due_date'] is None
+    assert not by_label(res, 'written statement')              # rule is unverified and must not be applied
 
 
 def test_past_date_is_overdue_not_urgent():
