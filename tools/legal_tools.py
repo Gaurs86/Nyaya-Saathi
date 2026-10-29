@@ -57,7 +57,7 @@ def check_legal_aid_tool(answers_json: str) -> str:
 def find_legal_aid_center_tool(district: str) -> str:
     """Find DLSA centers for a district.
 
-    Returns a JSON string with keys: found (bool), entries (list), nalasa_helpline.
+    Returns a JSON string with keys: found (bool), entries (list), nalsa_helpline.
     """
     result = dlsa_mod.find_center(district or "")
     return json.dumps(result, ensure_ascii=False)
